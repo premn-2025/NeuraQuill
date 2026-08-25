@@ -130,9 +130,30 @@ green → only then move to the next phase. No phase is "done" without tests.
       -- a copy/transcription slip *after* getting the right answer, not
       a computation error, a different and much smaller failure mode
       than the arithmetic errors seen pre-tool-use.
-- [ ] **Phase 8 — RAG**: chunking, embeddings, a vector store (pgvector or
-      local), retrieval. Tests: retrieval precision on a known small
-      corpus, chunking boundary correctness.
+- [x] **Phase 8 — RAG**: word-based chunking with overlap
+      (`rag/chunking.py`), a from-scratch TF-IDF vectorizer + cosine
+      similarity (`rag/embeddings.py`, no sklearn -- deliberately not
+      NeuraQuill's own embeddings, which would be a noisy signal at 10M
+      params), a local in-memory vector store, and a retriever tying them
+      together. 23 tests: chunking boundary correctness (full coverage,
+      exact overlap math, no duplicate/degenerate spans), TF-IDF
+      correctness (identical docs -> similarity 1.0, common terms get
+      lower idf than rare ones, OOV query terms ignored not erroring),
+      and **retrieval precision@1 = 100%, recall@3 = 100%** on a
+      10-document known corpus (the explicit PLAN.md requirement) plus a
+      chunk-level (not document-level) granularity test. 216/216 tests
+      passing overall. **Real run**: mixed those same 10 invented facts
+      (things NeuraQuill could not possibly know) into 754 pseudo-
+      documents of the real Phase 3 pretraining corpus -> a 30,177-chunk
+      haystack -- retrieval precision@1 stayed **100%** at that scale.
+      Then a qualitative end-to-end demo (`scripts/rag_chat.py`):
+      retrieval correctly surfaces the exact right fact every time
+      (e.g. "X200 ... weighs exactly 300 grams" at similarity 0.308 vs.
+      0.085 for the next result), but the SFT checkpoint's *composition*
+      of that context into a fluent answer is weak/garbled -- the same
+      generation-quality ceiling Phase 4 already established at this
+      model scale, not a new RAG-specific problem. Retrieval mechanism:
+      solid. Generation quality: still the 10M-param bottleneck.
 - [ ] **Phase 9 — Agents**: planner/worker/verifier loop built on the tool
       + RAG infrastructure. Tests: end-to-end task completion on scripted
       scenarios.

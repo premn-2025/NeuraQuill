@@ -20,9 +20,10 @@ current status.
 | 5 | Reasoning data + verifiers | ✅ implemented + tested (49 tests) + real run |
 | 6 | Preference optimization (DPO) | ✅ implemented + tested (13 tests) + real run (negative result) |
 | 7 | Tool calling | ✅ implemented + tested (29 tests) + real run |
-| 8+ | RAG, agents | not started |
+| 8 | RAG | ✅ implemented + tested (23 tests) + real run |
+| 9+ | Agents | not started |
 
-**193/193 tests passing.** NeuraQuill-10M's real runs (RTX 4060):
+**216/216 tests passing.** NeuraQuill-10M's real runs (RTX 4060):
 - Pretraining: 4000 steps on 2.375M filtered tokens from 15 public-domain
   books, val_loss 8.98 → 3.82 (perplexity ≈ 46), ~15 min.
 - SFT: 3000 steps on 13,378 filtered Dolly-15k conversations, val_loss
@@ -46,6 +47,11 @@ current status.
   loop). Evaluated through the *real* orchestrator on 60 fresh problems:
   **98.3%** (59/60), vs. 40.0% (Phase 5) / 33.3% (post-DPO) without tool
   use -- directly closing the gap those phases identified.
+- RAG: from-scratch TF-IDF retrieval (no sklearn), 100% precision@1 on a
+  known 10-doc corpus, still 100% at 30,177 chunks after mixing in the
+  real pretraining corpus as noise. Generation over retrieved context is
+  weak/garbled -- the same 10M-param ceiling Phase 4 established, not a
+  RAG-specific issue.
 - Content filter verified with zero blocklist-term matches in both
   training corpora and in sampled generations.
 
