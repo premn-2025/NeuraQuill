@@ -3,6 +3,7 @@ data/gutenberg_raw/
 data/*.bin
 data/*.npz
 data/pretrain_corpus_raw.txt
+data/pretrain_corpus_100m_raw.txt
 data/dolly15k.jsonl
 tokenizer/artifacts*/
 checkpoints/

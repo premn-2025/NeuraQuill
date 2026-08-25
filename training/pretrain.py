@@ -34,6 +34,11 @@ class TrainConfig:
     checkpoint_path: Optional[str] = None
     device: str = "cpu"
     seed: int = 1337
+    grad_accum_steps: int = 1
+    """Accumulate gradients over this many micro-batches of `batch_size`
+    before stepping the optimizer, so a memory-constrained GPU can still
+    train at a larger *effective* batch size (batch_size * grad_accum_steps)
+    without exceeding VRAM. 1 = no accumulation (original behavior)."""
 
 
 @dataclass
@@ -74,20 +79,26 @@ def train(
         for group in optimizer.param_groups:
             group["lr"] = lr
 
-        x, y = get_batch(train_data, train_cfg.block_size, train_cfg.batch_size, device=device)
-
         optimizer.zero_grad(set_to_none=True)
-        with torch.amp.autocast(device_type="cuda" if use_amp else "cpu", enabled=use_amp):
-            _, loss = model(x, targets=y)
+        accum_loss = 0.0
+        for _ in range(train_cfg.grad_accum_steps):
+            x, y = get_batch(train_data, train_cfg.block_size, train_cfg.batch_size, device=device)
+            with torch.amp.autocast(device_type="cuda" if use_amp else "cpu", enabled=use_amp):
+                _, micro_loss = model(x, targets=y)
+            # scale down before backward so accumulated gradients match the
+            # magnitude a single (batch_size * grad_accum_steps) batch would
+            # produce, not grad_accum_steps times too large
+            scaler.scale(micro_loss / train_cfg.grad_accum_steps).backward()
+            accum_loss += micro_loss.item()
+        loss_value = accum_loss / train_cfg.grad_accum_steps
 
-        scaler.scale(loss).backward()
         scaler.unscale_(optimizer)
         torch.nn.utils.clip_grad_norm_(model.parameters(), train_cfg.grad_clip)
         scaler.step(optimizer)
         scaler.update()
 
         history.steps.append(step)
-        history.train_losses.append(loss.item())
+        history.train_losses.append(loss_value)
 
         if step % train_cfg.eval_interval == 0 or step == train_cfg.max_steps - 1:
             val_loss = estimate_loss(
@@ -99,7 +110,7 @@ def train(
             history.val_losses.append(val_loss)
             dt = time.time() - t0
             log_fn(
-                f"step {step:6d} | lr {lr:.2e} | train_loss {loss.item():.4f} "
+                f"step {step:6d} | lr {lr:.2e} | train_loss {loss_value:.4f} "
                 f"| val_loss {val_loss:.4f} | {dt:.1f}s"
             )
             if train_cfg.checkpoint_path is not None and val_loss < best_val_loss:

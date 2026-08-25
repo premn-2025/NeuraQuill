@@ -22,9 +22,32 @@ current status.
 | 7 | Tool calling | ✅ implemented + tested (29 tests) + real run |
 | 8 | RAG | ✅ implemented + tested (23 tests) + real run |
 | 9 | Agents | ✅ implemented + tested (20 tests) + real run |
-| 10 | Scale up | not started |
+| 10 | Scale up (100M) | ✅ implemented + tested (3 tests) + real run |
+| 10.5 | Baseline evaluation | ✅ `scripts/baseline_eval.py` + `reports/*.json` |
 
-**236/236 tests passing.** NeuraQuill-10M's real runs (RTX 4060):
+**241/241 tests passing.**
+
+## NeuraQuill-10M vs NeuraQuill-100M (Phase 10.5 baseline)
+
+Same tokenizer, same datasets, same training pipeline for every stage
+(pretrain → SFT → reasoning → tools) -- only the model config changed.
+Full report JSON in `reports/`.
+
+| metric | 10M | 100M |
+|---|---|---|
+| perplexity | 45.8 | **33.5** |
+| reasoning accuracy (no tools) | 40.0% | 36.7% |
+| tool-calling accuracy | 98.3% | 98.3% |
+| RAG retrieval precision@1 | 100% | 100% |
+
+Scale bought a real perplexity win, but **not** better raw reasoning or
+more reliable tool use -- ~8M pretraining tokens is far too little for a
+99M-param model to reach fluent generation (parameters and tokens both
+need to scale together), and tool-calling accuracy is identical at both
+sizes because it only requires learning a templated call format, not
+exact computation. See PLAN.md Phase 10.5 for the full write-up.
+
+NeuraQuill-10M's real runs (RTX 4060):
 - Pretraining: 4000 steps on 2.375M filtered tokens from 15 public-domain
   books, val_loss 8.98 → 3.82 (perplexity ≈ 46), ~15 min.
 - SFT: 3000 steps on 13,378 filtered Dolly-15k conversations, val_loss

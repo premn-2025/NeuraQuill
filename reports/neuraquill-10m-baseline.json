@@ -1,0 +1,57 @@
+{
+  "name": "neuraquill-10m",
+  "timestamp": "2026-08-25T16:24:42",
+  "device": "cuda",
+  "perplexity": {
+    "checkpoint_step": 3400,
+    "val_loss": 3.8251145601272585,
+    "perplexity": 45.838051278542885,
+    "params": 10183680
+  },
+  "reasoning": {
+    "n": 60,
+    "seed": 999,
+    "accuracy": 0.4,
+    "by_kind": {
+      "comparison": {
+        "correct": 19,
+        "total": 19
+      },
+      "linear_equation": {
+        "correct": 3,
+        "total": 23
+      },
+      "arithmetic": {
+        "correct": 2,
+        "total": 18
+      }
+    }
+  },
+  "tools": {
+    "n": 60,
+    "seed": 999,
+    "accuracy": 0.9833333333333333,
+    "by_kind": {
+      "comparison": {
+        "correct": 19,
+        "total": 19
+      },
+      "linear_equation": {
+        "correct": 23,
+        "total": 23
+      },
+      "arithmetic": {
+        "correct": 17,
+        "total": 18
+      }
+    }
+  },
+  "rag_retrieval": {
+    "precision_at_1": 1.0
+  },
+  "not_yet_implemented": [
+    "general_knowledge_qa",
+    "coding",
+    "hallucination_calibration"
+  ]
+}

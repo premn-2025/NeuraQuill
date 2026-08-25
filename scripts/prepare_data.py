@@ -32,6 +32,12 @@ def main():
         help="skip the content filter (data/content_filter.py) -- off by default, "
              "i.e. filtering runs unless you pass this",
     )
+    parser.add_argument(
+        "--reuse-tokenizer", type=str, default=None,
+        help="path to an already-trained tokenizer to load and reuse instead of "
+             "training a new one (e.g. when scaling up the corpus/model but keeping "
+             "the same vocabulary, as in Phase 10)",
+    )
     args = parser.parse_args()
 
     text = Path(args.corpus).read_text(encoding="utf-8")
@@ -44,12 +50,17 @@ def main():
     else:
         print("Content filter: SKIPPED (--no-filter)")
 
-    print(f"Training tokenizer (vocab_size={args.vocab_size}) ...")
-    tok = ByteLevelBPETokenizer.train(
-        [text], vocab_size=args.vocab_size, special_tokens=("<|endoftext|>", "<|pad|>")
-    )
-    tok.save(args.tokenizer_out)
-    print(f"Saved tokenizer -> {args.tokenizer_out} ({tok.vocab_size} tokens, {len(tok.merges)} merges)")
+    if args.reuse_tokenizer:
+        print(f"Reusing existing tokenizer from {args.reuse_tokenizer} ...")
+        tok = ByteLevelBPETokenizer.load(args.reuse_tokenizer)
+        print(f"Loaded tokenizer ({tok.vocab_size} tokens, {len(tok.merges)} merges)")
+    else:
+        print(f"Training tokenizer (vocab_size={args.vocab_size}) ...")
+        tok = ByteLevelBPETokenizer.train(
+            [text], vocab_size=args.vocab_size, special_tokens=("<|endoftext|>", "<|pad|>")
+        )
+        tok.save(args.tokenizer_out)
+        print(f"Saved tokenizer -> {args.tokenizer_out} ({tok.vocab_size} tokens, {len(tok.merges)} merges)")
 
     print("Tokenizing corpus ...")
     n_tokens = tokenize_and_save(tok, text, args.tokens_out)

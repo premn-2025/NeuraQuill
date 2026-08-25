@@ -36,6 +36,12 @@ def main():
     parser.add_argument("--eval-interval", type=int, default=200)
     parser.add_argument("--checkpoint", type=str, default="checkpoints/neuraquill-10m.pt")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument(
+        "--grad-accum-steps", type=int, default=1,
+        help="accumulate gradients over this many micro-batches per optimizer step "
+             "(effective batch size = batch_size * grad_accum_steps), for training "
+             "larger configs within limited VRAM",
+    )
     args = parser.parse_args()
 
     config = load_config(args.config)
@@ -66,6 +72,7 @@ def main():
         eval_interval=args.eval_interval,
         checkpoint_path=args.checkpoint,
         device=device,
+        grad_accum_steps=args.grad_accum_steps,
     )
 
     train(model, config, train_data, val_data, train_cfg, start_step=start_step, optimizer=optimizer)

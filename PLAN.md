@@ -185,7 +185,105 @@ green → only then move to the next phase. No phase is "done" without tests.
       execution, verification -- worked correctly end-to-end throughout;
       what limits scenario pass rate is model scale/quality, consistent
       with (not contradicting) every earlier phase's findings.
-- [ ] **Phase 10 — Scale up**: 10M → 100M → beyond, as compute allows.
+- [x] **Phase 10 — Scale up (100M)**: `configs/100m.yaml` (13 layers, 12
+      heads, 768 dim, 98.8M params, same tokenizer/block_size as the 10M
+      config -- config-only scaling, no architecture changes). Added
+      gradient accumulation to `training/pretrain.py` (needed: batch_size
+      16 at this size thrashed into slow Windows "shared GPU memory"
+      spillover on the RTX 4060's 8GB; batch_size=8 x grad_accum_steps=4
+      = effective batch 32 fits cleanly at ~6GB). 3 new tests including a
+      rigorous check that accumulated gradients exactly match a single
+      large-batch gradient. Corpus expanded from 15 to 35 public-domain
+      books (8.5MB -> 26.3MB, 2.38M -> 7.96M tokens), reusing the *same*
+      trained tokenizer (deliberate -- avoids re-running the slow
+      pure-Python BPE trainer at larger scale). **Real run**: pretrain
+      (4000 steps, 76.3 min) val_loss 8.94 -> best **3.44** at step 3000
+      (train loss kept falling after that while val loss crept back up --
+      overfitting, honestly visible and correctly handled by best-checkpoint
+      saving, not hidden). Then SFT (Dolly, 18 min) val_loss 8.20 -> 3.49,
+      reasoning fine-tune (11 min) val_loss 2.77 -> 0.14, tool fine-tune
+      (11 min) val_loss -> ~0.002 -- all four stages reused the *exact*
+      same datasets/tokenizers as the 10M runs, config-only scaling
+      confirmed working end-to-end.
+- [x] **Phase 10.5 — Baseline evaluation**: `scripts/baseline_eval.py`,
+      a permanent reusable report covering perplexity, reasoning (Phase 5),
+      tool-calling (Phase 7), and RAG retrieval (Phase 8) -- consolidating
+      those phases' eval code rather than reimplementing it, with results
+      written to `reports/*.json` (model version, step, per-category
+      accuracy + raw counts). Honestly lists what's *not* yet measured
+      (general knowledge QA, coding, hallucination calibration) instead of
+      skipping the topic. **10M vs 100M, side by side**:
+
+      | metric | 10M | 100M |
+      |---|---|---|
+      | perplexity | 45.8 | **33.5** |
+      | reasoning, no tools | 40.0% | 36.7% |
+      | tool calling | 98.3% | 98.3% |
+      | RAG precision@1 | 100% | 100% |
+
+      The headline finding: **perplexity improved substantially with
+      scale (a real, measured win), but neither raw reasoning accuracy
+      nor tool-calling reliability did** -- reasoning was flat-to-slightly-down
+      (noise-level; both models are still bad at raw arithmetic, ~0-11%),
+      and tool-calling was identical at 98.3% both sizes, because tool
+      use only requires learning a templated call format, which a 10M
+      model already does as reliably as a 100M one -- the actual
+      computation is offloaded to the deterministic sandbox either way.
+      Sample chat generations at 100M are still largely incoherent (one
+      new observation: a "rainbow colors" association surfaced, misapplied
+      to the wrong question -- a hint of more specific factual encoding
+      than 10M showed, still not coherent). **Conclusion, stated plainly**:
+      ~8M pretraining tokens is nowhere near enough for a 98.8M-parameter
+      model to reach fluent generation (consistent with Chinchilla-style
+      scaling laws -- tokens must scale with parameters, not just one or
+      the other), and reasoning capability doesn't come from parameter
+      count alone at this scale -- tool-calling remains the load-bearing
+      fix for exact computation, not more layers.
+- [ ] **Phase 11 — Teacher data factory**: use stronger models to generate
+      targeted synthetic training data (reasoning, coding, tool-use
+      trajectories), prioritized by the Phase 10.5 baseline's weakest
+      categories rather than generated blindly. **Needs a decision before
+      starting**: which teacher model(s) are actually available (API keys/
+      budget) -- this session can act as one teacher directly (no external
+      API needed) but a genuine multi-teacher ensemble (Gemini/Qwen/Llama/
+      etc.) requires credentials this environment doesn't have configured.
+- [ ] **Phase 12 — Verifiable RL**: extend Phase 5/6's verifier-driven
+      approach with an actual RL loop (not just DPO) for math/logic/coding,
+      using a code-execution sandbox (a real one, with process isolation/
+      timeouts -- distinct from Phase 5's arithmetic-only AST sandbox) for
+      coding rewards. Every experiment reports both the training metric
+      *and* the downstream task metric, since Phase 6 already showed those
+      can diverge.
+- [ ] **Phase 13 — Adaptive learning**: a stable core model + fast-changing
+      memory + specialized adapters, gated by a "Learning Gate" (novelty /
+      reliability / usefulness / verifier score) that decides whether an
+      experience gets ignored, stored in memory, or used to train an
+      adapter -- and adapters are kept only if they measurably improve the
+      Phase 10.5 baseline, discarded otherwise. This is the project's most
+      distinctive research direction, not a small feature.
+- [ ] **Phase 14 — Memory + consolidation**: long-term memory separate from
+      web/RAG (Phase 8, current) and core weights (stable), with periodic
+      consolidation of repeatedly-useful verified memory into trained
+      adapters -- gated the same way as Phase 13, improvement-or-discard.
+- [ ] **Phase 15 — Advanced agents**: extend Phase 9's planner/router/
+      worker/verifier loop toward multi-step goal -> plan -> execute ->
+      observe -> correct -> verify workflows with specialized agents
+      (research/coding/analysis), not just single-subtask dispatch.
+- [ ] **Phase 16 — Real-time knowledge**: query-time web search + source
+      cross-checking + citation, separate from the static Phase 8 RAG
+      index -- freshness without continuously retraining the base model.
+- [ ] **Phase 17 — Multimodal**: a vision encoder + projection into
+      NeuraQuill's embedding space, extending the text-only pipeline.
+- [ ] **Phase 18 — Scale further**: 100M -> 300M -> 1B -> 3B+, same
+      tokenizer/pipeline, config-driven, as compute allows.
+- [ ] **Phase 19 — Advanced training/efficiency**: attention variants
+      (GQA/MQA/RoPE), curriculum learning, mixed precision/quantization,
+      distributed training, and inference-side optimization (KV-cache,
+      speculative decoding) once scale makes these worth the complexity.
 
 Each phase's tests live in `tests/test_phase<N>_<name>.py` and must pass
 (`pytest tests/ -v`) before the corresponding checkbox is marked done.
+Every training experiment from Phase 10 onward records both its training
+metric and its real downstream task metric -- Phase 6's DPO result (the
+preference objective improved while task accuracy got worse) is the
+reason this discipline is non-negotiable going forward.

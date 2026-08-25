@@ -181,6 +181,7 @@ def _expected_param_count(config: GPTConfig) -> int:
         tiny_config(),
         tiny_config(n_layer=4, n_head=4, n_embd=32),
         GPTConfig(vocab_size=8192, block_size=512, n_layer=6, n_head=5, n_embd=320),
+        GPTConfig(vocab_size=8192, block_size=512, n_layer=13, n_head=12, n_embd=768),
     ],
 )
 def test_param_count_matches_independent_formula(config):
@@ -195,6 +196,13 @@ def test_10m_config_is_roughly_10m_params():
     model = GPT(config)
     n = model.num_parameters()
     assert 8_000_000 <= n <= 13_000_000
+
+
+def test_100m_config_is_roughly_100m_params():
+    config = GPTConfig(vocab_size=8192, block_size=512, n_layer=13, n_head=12, n_embd=768)
+    model = GPT(config)
+    n = model.num_parameters()
+    assert 90_000_000 <= n <= 110_000_000
 
 
 def test_weight_tying_shares_storage():

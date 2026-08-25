@@ -33,6 +33,30 @@ BOOKS = [
     (2554, "Crime and Punishment"),
     (1952, "The Yellow Wallpaper"),
     (55, "The Wonderful Wizard of Oz"),
+    # Phase 10 additions -- scaling up the pretraining corpus for
+    # NeuraQuill-100M. IDs below are less exhaustively pre-verified than
+    # the Phase 3 set above; main() skips (rather than crashes on) any
+    # that fail to download, so an occasional wrong/dead ID is fine.
+    (46, "A Christmas Carol"),
+    (1400, "Great Expectations"),
+    (730, "Oliver Twist"),
+    (174, "The Picture of Dorian Gray"),
+    (844, "The Importance of Being Earnest"),
+    (43, "Strange Case of Dr Jekyll and Mr Hyde"),
+    (35, "The Time Machine"),
+    (36, "The War of the Worlds"),
+    (120, "Treasure Island"),
+    (209, "The Turn of the Screw"),
+    (74, "The Adventures of Tom Sawyer"),
+    (2591, "Grimm's Fairy Tales"),
+    (100, "The Complete Works of William Shakespeare"),
+    (1080, "A Modest Proposal"),
+    (1497, "The Republic"),
+    (2814, "Dubliners"),
+    (6130, "The Iliad"),
+    (1727, "The Odyssey"),
+    (205, "Walden"),
+    (2600, "War and Peace"),
 ]
 
 URL_TEMPLATE = "https://www.gutenberg.org/cache/epub/{id}/pg{id}.txt"
@@ -78,26 +102,36 @@ def main():
 
     all_texts = []
     total_chars = 0
+    n_ok = 0
+    n_failed = 0
     for book_id, title in BOOKS:
         cache_path = raw_dir / f"{book_id}.txt"
-        if cache_path.exists():
-            body = cache_path.read_text(encoding="utf-8")
-            print(f"[cache] {title} ({book_id}) -- {len(body):,} chars")
-        else:
-            print(f"[download] {title} ({book_id}) ...", end=" ", flush=True)
-            raw = download_book(book_id)
-            body = strip_boilerplate(raw)
-            cache_path.write_text(body, encoding="utf-8")
-            print(f"{len(body):,} chars")
+        try:
+            if cache_path.exists():
+                body = cache_path.read_text(encoding="utf-8")
+                print(f"[cache] {title} ({book_id}) -- {len(body):,} chars")
+            else:
+                print(f"[download] {title} ({book_id}) ...", end=" ", flush=True)
+                raw = download_book(book_id)
+                body = strip_boilerplate(raw)
+                if len(body) < 1000:
+                    raise RuntimeError(f"suspiciously short body ({len(body)} chars) -- likely a bad id")
+                cache_path.write_text(body, encoding="utf-8")
+                print(f"{len(body):,} chars")
+        except Exception as e:
+            print(f"[skip] {title} ({book_id}) -- {e}")
+            n_failed += 1
+            continue
         all_texts.append(f"\n\n<|endoftext|>\n\n{body}")
         total_chars += len(body)
+        n_ok += 1
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text("".join(all_texts), encoding="utf-8")
 
-    print(f"\nWrote {out_path} -- {total_chars:,} chars from {len(BOOKS)} books "
-          f"(~{total_chars / 1e6:.1f} MB)")
+    print(f"\nWrote {out_path} -- {total_chars:,} chars from {n_ok} books "
+          f"(~{total_chars / 1e6:.1f} MB); skipped {n_failed} failed downloads")
 
 
 if __name__ == "__main__":

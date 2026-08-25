@@ -250,6 +250,86 @@ def test_training_loss_decreases_on_learnable_synthetic_pattern():
     assert last_val < first_val / 3
 
 
+# --------------------------------------------------------------------------
+# gradient accumulation (Phase 10: needed to train larger configs within
+# limited VRAM at a reasonable *effective* batch size)
+# --------------------------------------------------------------------------
+
+
+def test_grad_accum_matches_single_large_batch_gradient():
+    """The core correctness property: accumulating N equal-sized
+    micro-batches (loss scaled by 1/N before each backward) must produce
+    the same parameter gradients as a single backward on the concatenated
+    batch -- true here because equal-sized micro-batches means averaging
+    their per-batch means with equal weight 1/N is mathematically
+    identical to the mean over the full concatenated batch."""
+    config = tiny_config(n_embd=32, n_layer=2, n_head=2, block_size=16)
+    torch.manual_seed(0)
+    micro_batches = [
+        (torch.randint(0, config.vocab_size, (4, 16)), torch.randint(0, config.vocab_size, (4, 16)))
+        for _ in range(3)
+    ]
+    x_full = torch.cat([mb[0] for mb in micro_batches], dim=0)
+    y_full = torch.cat([mb[1] for mb in micro_batches], dim=0)
+
+    torch.manual_seed(1)
+    model_a = GPT(config)
+    for x, y in micro_batches:
+        _, loss = model_a(x, targets=y)
+        (loss / len(micro_batches)).backward()
+    grads_a = [p.grad.clone() for p in model_a.parameters()]
+
+    torch.manual_seed(1)
+    model_b = GPT(config)
+    _, loss_b = model_b(x_full, targets=y_full)
+    loss_b.backward()
+    grads_b = [p.grad.clone() for p in model_b.parameters()]
+
+    for ga, gb in zip(grads_a, grads_b):
+        assert torch.allclose(ga, gb, atol=1e-5)
+
+
+def test_grad_accum_history_length_counts_optimizer_steps_not_microbatches():
+    """history should have one entry per optimizer step (max_steps), not
+    one per micro-batch, regardless of grad_accum_steps."""
+    torch.manual_seed(0)
+    config = tiny_config(n_embd=32, n_layer=2, n_head=2, block_size=16)
+    model = GPT(config)
+    data = np.random.randint(0, config.vocab_size, size=2000).astype(np.uint16)
+    train_data, val_data = split_train_val(data, val_fraction=0.1)
+
+    train_cfg = TrainConfig(
+        max_steps=10, warmup_steps=2, batch_size=4, block_size=16,
+        max_lr=1e-3, min_lr=1e-4, eval_interval=5, grad_accum_steps=3,
+        checkpoint_path=None, device="cpu",
+    )
+    history = train(model, config, train_data, val_data, train_cfg, log_fn=lambda s: None)
+    assert len(history.steps) == 10
+
+
+def test_grad_accum_training_still_learns():
+    """Same learnable-pattern setup as the no-accumulation test, but with
+    grad_accum_steps=4 and a quarter of the batch_size -- must still learn."""
+    torch.manual_seed(0)
+    vocab_size = 32
+    period = 6
+    n_tokens = 20000
+    pattern = np.tile(np.arange(period, dtype=np.uint16), n_tokens // period + 1)[:n_tokens]
+    train_data, val_data = split_train_val(pattern, val_fraction=0.05)
+
+    config = tiny_config(vocab_size=vocab_size, n_embd=32, n_layer=2, n_head=2, block_size=16)
+    model = GPT(config)
+
+    train_cfg = TrainConfig(
+        max_steps=300, warmup_steps=20, batch_size=4, block_size=16,
+        max_lr=5e-3, min_lr=5e-4, eval_interval=50, eval_batches=5,
+        grad_accum_steps=4, checkpoint_path=None, device="cpu",
+    )
+    history = train(model, config, train_data, val_data, train_cfg, log_fn=lambda s: None)
+
+    assert history.val_losses[-1] < history.val_losses[0] / 2
+
+
 def test_estimate_loss_and_perplexity_consistency():
     config = tiny_config()
     model = GPT(config)
