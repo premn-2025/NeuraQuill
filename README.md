@@ -19,9 +19,10 @@ current status.
 | 4 | Instruction tuning (SFT + chat) | ✅ implemented + tested (19 tests) + real run |
 | 5 | Reasoning data + verifiers | ✅ implemented + tested (49 tests) + real run |
 | 6 | Preference optimization (DPO) | ✅ implemented + tested (13 tests) + real run (negative result) |
-| 7+ | Tools, RAG, agents | not started |
+| 7 | Tool calling | ✅ implemented + tested (29 tests) + real run |
+| 8+ | RAG, agents | not started |
 
-**164/164 tests passing.** NeuraQuill-10M's real runs (RTX 4060):
+**193/193 tests passing.** NeuraQuill-10M's real runs (RTX 4060):
 - Pretraining: 4000 steps on 2.375M filtered tokens from 15 public-domain
   books, val_loss 8.98 → 3.82 (perplexity ≈ 46), ~15 min.
 - SFT: 3000 steps on 13,378 filtered Dolly-15k conversations, val_loss
@@ -40,6 +41,11 @@ current status.
   but held-out reasoning accuracy went **40.0% → 33.3%** -- a real
   negative result (reward-proxy gains not transferring to task
   accuracy), reported as-is rather than smoothed over. See PLAN.md.
+- Tool calling: trained the model to hand arithmetic off to a real
+  calculator tool (a 4-token call/result wire format + an orchestrator
+  loop). Evaluated through the *real* orchestrator on 60 fresh problems:
+  **98.3%** (59/60), vs. 40.0% (Phase 5) / 33.3% (post-DPO) without tool
+  use -- directly closing the gap those phases identified.
 - Content filter verified with zero blocklist-term matches in both
   training corpora and in sampled generations.
 
