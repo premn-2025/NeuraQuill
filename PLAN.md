@@ -298,13 +298,52 @@ green → only then move to the next phase. No phase is "done" without tests.
       teacher data into the *original* template dataset instead of a
       pure continuation fine-tune, or a much gentler LR/step count with
       early stopping at the first val-loss uptick (step ~50, not 100).
-- [ ] **Phase 12 — Verifiable RL**: extend Phase 5/6's verifier-driven
-      approach with an actual RL loop (not just DPO) for math/logic/coding,
-      using a code-execution sandbox (a real one, with process isolation/
-      timeouts -- distinct from Phase 5's arithmetic-only AST sandbox) for
-      coding rewards. Every experiment reports both the training metric
-      *and* the downstream task metric, since Phase 6 already showed those
-      can diverge.
+- [ ] **Phase 12 — Verifiable reasoning + reward learning**, split into
+      four sub-phases rather than jumping straight to RL, because Phase
+      11's negative result showed the failure was training strategy
+      (too little data, too little stylistic consistency, LR tuned for
+      the wrong data scale), not data quality:
+  - [ ] **12A — Build a large, balanced, verified dataset.** Scale the
+        Phase 11 teacher factory volume up substantially (thousands, not
+        109), across categories (math/logic/coding/general/tool-use),
+        and combine it *with* the original template/instruction data
+        rather than replacing it -- Phase 11's checkpoint was corrupted
+        by training on teacher data alone.
+  - [ ] **12B — Controlled SFT experiments**, same starting checkpoint,
+        varied only in data mixture: (A) baseline/no further SFT, (B)
+        original data only, (C) teacher data only, (D) mixed. Compare
+        all four against the Phase 10.5 baseline categories before
+        adopting anything -- the hypothesis is (D) beats (C), but that
+        gets measured, not assumed.
+  - [ ] **12C — A real verifier/reward environment**: records
+        (question, candidate, tool_calls, verification, reward) per
+        attempt, not just question->answer; a real process-isolated
+        code-execution sandbox for coding rewards (distinct from Phase
+        5's arithmetic-only AST sandbox, which stays scoped to
+        arithmetic); partial-credit rewards where a binary correct/wrong
+        loses information (e.g. tool-call reward = correct tool +
+        correct arguments + correct final result, each worth partial
+        credit).
+  - [ ] **12D — RL / reward optimization** on top of 12C's environment,
+        only once it's built and produces sane rewards on known cases.
+        Every experiment reports the training metric *and* the
+        downstream task metric on fresh held-out problems, since Phase
+        6 already showed those can diverge -- that discipline is
+        non-negotiable from here on.
+
+      **Checkpoint naming/adoption discipline going forward**: every
+      variant gets an explicit name (`neuraquill-100m-v1`,
+      `-v1-teacher`, `-v1-mixed`, ...), and a new checkpoint is only
+      *adopted* (becomes the default for the next stage to build on) if
+      it demonstrably beats the current best on the Phase 10.5 baseline
+      categories -- an evaluation gate, not a vibe. See
+      `scripts/evaluate_and_gate.py`.
+
+      **Teacher specialization** (once there's enough per-category data
+      to measure it): track each teacher's verified accuracy *per
+      category*, not just overall, so the Phase 11 router can eventually
+      route by "who's actually best at this category" instead of a
+      static capability list.
 - [ ] **Phase 13 — Adaptive learning**: a stable core model + fast-changing
       memory + specialized adapters, gated by a "Learning Gate" (novelty /
       reliability / usefulness / verifier score) that decides whether an
