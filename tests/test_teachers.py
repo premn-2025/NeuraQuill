@@ -259,8 +259,24 @@ def test_delete_model_raises_on_failure():
 
 
 # --------------------------------------------------------------------------
-# Anthropic teacher client (mocked SDK -- no real API key needed for tests)
+# Anthropic teacher client (mocked SDK -- no real API key or spend needed)
 # --------------------------------------------------------------------------
+
+import teachers.anthropic_client as anthropic_client_module  # noqa: E402
+from teachers.spend_tracker import BudgetExceededError, SpendTracker  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _isolate_anthropic_tracker(monkeypatch, tmp_path):
+    """Every test in this file gets its own fresh, isolated SpendTracker
+    (a tmp log file) instead of the module's lazily-initialized global --
+    so tests never leak spend state into each other or touch the real
+    data/anthropic_spend_log.json."""
+    monkeypatch.setattr(
+        anthropic_client_module, "_tracker",
+        SpendTracker(budget_usd=10.0, log_path=str(tmp_path / "spend_test.json")),
+    )
+    yield
 
 
 def _fake_text_block(text):
@@ -268,6 +284,14 @@ def _fake_text_block(text):
     block.type = "text"
     block.text = text
     return block
+
+
+def _fake_claude_response(text, input_tokens=100, output_tokens=200):
+    response = MagicMock()
+    response.content = [_fake_text_block(text)]
+    response.usage.input_tokens = input_tokens
+    response.usage.output_tokens = output_tokens
+    return response
 
 
 def test_anthropic_generate_requires_api_key(monkeypatch):
@@ -282,12 +306,9 @@ def test_anthropic_generate_extracts_text_blocks(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key-for-test")
     from teachers.anthropic_client import generate as claude_generate
 
-    fake_response = MagicMock()
-    fake_response.content = [_fake_text_block("hello "), _fake_text_block("world")]
-
     with patch("teachers.anthropic_client.anthropic.Anthropic") as mock_client_cls:
         mock_client = MagicMock()
-        mock_client.messages.create.return_value = fake_response
+        mock_client.messages.create.return_value = _fake_claude_response("hello world")
         mock_client_cls.return_value = mock_client
 
         result = claude_generate("say hi", model="claude-haiku-4-5")
@@ -301,17 +322,119 @@ def test_anthropic_generate_passes_system_prompt(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key-for-test")
     from teachers.anthropic_client import generate as claude_generate
 
-    fake_response = MagicMock()
-    fake_response.content = [_fake_text_block("ok")]
-
     with patch("teachers.anthropic_client.anthropic.Anthropic") as mock_client_cls:
         mock_client = MagicMock()
-        mock_client.messages.create.return_value = fake_response
+        mock_client.messages.create.return_value = _fake_claude_response("ok")
         mock_client_cls.return_value = mock_client
 
         claude_generate("hi", system="be terse", model="claude-haiku-4-5")
         call_kwargs = mock_client.messages.create.call_args.kwargs
         assert call_kwargs["system"] == "be terse"
+
+
+# --------------------------------------------------------------------------
+# spend tracking + hard budget enforcement -- the safety-critical part
+# --------------------------------------------------------------------------
+
+
+def test_estimate_cost_known_model():
+    from teachers.spend_tracker import estimate_cost
+
+    # claude-opus-5: $5/1M input, $25/1M output
+    cost = estimate_cost("claude-opus-5", input_tokens=1_000_000, output_tokens=1_000_000)
+    assert cost == pytest.approx(30.0)
+
+
+def test_estimate_cost_unknown_model_uses_most_expensive_rate_not_zero():
+    from teachers.spend_tracker import estimate_cost
+
+    cost_unknown = estimate_cost("some-future-model", input_tokens=1_000_000, output_tokens=1_000_000)
+    cost_opus = estimate_cost("claude-opus-5", input_tokens=1_000_000, output_tokens=1_000_000)
+    assert cost_unknown >= cost_opus  # fail safe: never under-count an unrecognized model's cost
+
+
+def test_spend_tracker_persists_across_instances(tmp_path):
+    log_path = str(tmp_path / "spend.json")
+    tracker1 = SpendTracker(budget_usd=10.0, log_path=log_path)
+    tracker1.record("claude-opus-5", input_tokens=100_000, output_tokens=10_000)
+    spent_after_first = tracker1.total_spent
+    assert spent_after_first > 0
+
+    tracker2 = SpendTracker(budget_usd=10.0, log_path=log_path)  # simulates a fresh process/run
+    assert tracker2.total_spent == pytest.approx(spent_after_first)
+
+
+def test_spend_tracker_check_budget_raises_before_exceeding(tmp_path):
+    tracker = SpendTracker(budget_usd=1.0, log_path=str(tmp_path / "spend.json"))
+    tracker.record("claude-opus-5", input_tokens=100_000, output_tokens=10_000)  # ~$0.75
+    with pytest.raises(BudgetExceededError):
+        tracker.check_budget(estimated_next_cost=0.30)  # would push total past $1.00
+
+
+def test_spend_tracker_check_budget_allows_when_within_budget(tmp_path):
+    tracker = SpendTracker(budget_usd=10.0, log_path=str(tmp_path / "spend.json"))
+    tracker.check_budget(estimated_next_cost=1.0)  # must not raise
+
+
+def test_spend_tracker_remaining():
+    tracker = SpendTracker(budget_usd=10.0, log_path="unused")
+    tracker._total_spent = 3.0  # simulate prior spend without touching disk
+    assert tracker.remaining == pytest.approx(7.0)
+
+
+def test_anthropic_generate_refuses_call_over_budget_without_hitting_api(monkeypatch, tmp_path):
+    """The core safety guarantee: a call whose worst-case cost would
+    exceed the remaining budget must be refused BEFORE the API is ever
+    called -- not logged as an overspend after the fact."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key-for-test")
+    monkeypatch.setattr(
+        anthropic_client_module, "_tracker",
+        SpendTracker(budget_usd=0.001, log_path=str(tmp_path / "tiny_budget.json")),  # essentially $0
+    )
+    from teachers.anthropic_client import generate as claude_generate
+
+    with patch("teachers.anthropic_client.anthropic.Anthropic") as mock_client_cls:
+        mock_client = MagicMock()
+        mock_client_cls.return_value = mock_client
+
+        with pytest.raises(BudgetExceededError):
+            claude_generate("a very long prompt " * 100, max_tokens=2000)
+
+        mock_client.messages.create.assert_not_called()  # the network call must never happen
+
+
+def test_anthropic_generate_records_actual_spend_after_call(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key-for-test")
+    from teachers.anthropic_client import generate as claude_generate
+
+    with patch("teachers.anthropic_client.anthropic.Anthropic") as mock_client_cls:
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = _fake_claude_response("ok", input_tokens=500, output_tokens=800)
+        mock_client_cls.return_value = mock_client
+
+        claude_generate("hi")
+        tracker = anthropic_client_module._tracker
+        assert tracker.total_spent > 0
+        assert len(tracker._calls) == 1
+        assert tracker._calls[0]["input_tokens"] == 500
+        assert tracker._calls[0]["output_tokens"] == 800
+
+
+def test_anthropic_generate_spend_accumulates_across_multiple_calls(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key-for-test")
+    from teachers.anthropic_client import generate as claude_generate
+
+    with patch("teachers.anthropic_client.anthropic.Anthropic") as mock_client_cls:
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = _fake_claude_response("ok", input_tokens=1000, output_tokens=1000)
+        mock_client_cls.return_value = mock_client
+
+        claude_generate("hi")
+        spent_after_one = anthropic_client_module._tracker.total_spent
+        claude_generate("hi again")
+        spent_after_two = anthropic_client_module._tracker.total_spent
+
+        assert spent_after_two == pytest.approx(spent_after_one * 2)
 
 
 # --------------------------------------------------------------------------
@@ -361,6 +484,8 @@ def test_teacher_unknown_provider_raises():
         ("gemma3:4b", "reasoning"),
         ("llama3.2:latest", "reasoning"),
         ("mistral:latest", "reasoning"),
+        ("glm4:9b", "math"),
+        ("command-r7b:latest", "research"),
         ("claude-opus-5", "research"),
     ],
 )

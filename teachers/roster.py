@@ -21,6 +21,8 @@ CAPABILITY_PROFILES = {
     "gemma": ["reasoning", "general"],
     "llama": ["reasoning", "general"],
     "mistral": ["reasoning", "general"],
+    "glm": ["math", "reasoning", "general"],
+    "command-r": ["reasoning", "general", "research"],  # Cohere's RAG/tool-use-focused family
     "claude": ["math", "code", "reasoning", "general", "research"],
 }
 DEFAULT_CAPABILITIES = ["general"]  # unrecognized model -> safest, narrowest default

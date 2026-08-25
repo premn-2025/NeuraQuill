@@ -149,10 +149,16 @@ def main():
                          help="only teachers with this capability are used (see teachers/roster.py)")
     parser.add_argument("--out", type=str, default="data/teacher_reasoning_dataset.jsonl")
     parser.add_argument("--trajectories-out", type=str, default="data/teacher_trajectories.jsonl")
+    parser.add_argument("--skip-claude", action="store_true", help="exclude the Anthropic teacher from this run")
+    parser.add_argument("--skip-ollama", action="store_true", help="exclude all Ollama teachers from this run")
     args = parser.parse_args()
 
     load_env()
     roster = build_roster()
+    if args.skip_claude:
+        roster = [t for t in roster if t.provider != "anthropic"]
+    if args.skip_ollama:
+        roster = [t for t in roster if t.provider != "ollama"]
     teachers = teachers_for_category(roster, args.category)
     print(f"Full roster: {[t.name for t in roster]}")
     print(f"Teachers for category={args.category!r}: {[t.name for t in teachers]}")
