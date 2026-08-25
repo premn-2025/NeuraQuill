@@ -154,9 +154,37 @@ green → only then move to the next phase. No phase is "done" without tests.
       generation-quality ceiling Phase 4 already established at this
       model scale, not a new RAG-specific problem. Retrieval mechanism:
       solid. Generation quality: still the 10M-param bottleneck.
-- [ ] **Phase 9 — Agents**: planner/worker/verifier loop built on the tool
-      + RAG infrastructure. Tests: end-to-end task completion on scripted
-      scenarios.
+- [x] **Phase 9 — Agents**: a planner (`agents/planner.py`, splits
+      compound tasks on connective phrases) -> router (`agents/router.py`,
+      classifies each subtask "reasoning" vs "knowledge") -> worker
+      (`ReasoningWorker` wraps Phase 7's tool orchestrator,
+      `RAGWorker` wraps Phase 8's retriever) -> verifier
+      (`verify_reasoning` reuses Phase 5's grader, `verify_knowledge_
+      grounded` checks the expected fact substring is present) loop.
+      Router and planner are deliberately rule-based, not LLM-driven --
+      Phases 5/6 already showed this 10M model's free-form judgment is
+      unreliable at this scale; a learned router/planner is natural
+      future work once the base model scales up (Phase 10). 20 tests
+      using the same scripted-model-double technique as Phase 7,
+      including end-to-end scripted scenarios (single reasoning task,
+      single knowledge task, compound multi-subtask task, a deliberately
+      wrong subtask to prove the verifier catches failure, verifier-count
+      mismatch). 236/236 tests passing overall. **Real run**
+      (`scripts/agent_demo.py`): two *different* real checkpoints as two
+      specialized workers (Phase 7's tool-tuned model for reasoning,
+      Phase 4's SFT model + Phase 8's retrieval index for knowledge) on
+      6 scripted scenarios. Routing was **100% correct** on every
+      subtask (8/8). Reasoning-via-tools: 3/4 correct (one interesting
+      failure -- a degenerate token-repetition loop before ever
+      completing a valid tool call, a known small-model failure mode).
+      Knowledge-via-RAG: 0/4 correct -- not a retrieval failure (Phase 8
+      already showed retrieval is reliable), but the same
+      generation-fluency ceiling Phase 4/8 established for this
+      checkpoint at 10M params. The agent *architecture* -- planning,
+      routing, dispatching to the right specialized checkpoint, tool
+      execution, verification -- worked correctly end-to-end throughout;
+      what limits scenario pass rate is model scale/quality, consistent
+      with (not contradicting) every earlier phase's findings.
 - [ ] **Phase 10 — Scale up**: 10M → 100M → beyond, as compute allows.
 
 Each phase's tests live in `tests/test_phase<N>_<name>.py` and must pass
