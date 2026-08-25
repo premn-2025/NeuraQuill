@@ -3,3 +3,4 @@ numpy
 pytest
 tqdm
 pyyaml
+anthropic>=0.100

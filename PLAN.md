@@ -239,14 +239,65 @@ green → only then move to the next phase. No phase is "done" without tests.
       the other), and reasoning capability doesn't come from parameter
       count alone at this scale -- tool-calling remains the load-bearing
       fix for exact computation, not more layers.
-- [ ] **Phase 11 — Teacher data factory**: use stronger models to generate
-      targeted synthetic training data (reasoning, coding, tool-use
-      trajectories), prioritized by the Phase 10.5 baseline's weakest
-      categories rather than generated blindly. **Needs a decision before
-      starting**: which teacher model(s) are actually available (API keys/
-      budget) -- this session can act as one teacher directly (no external
-      API needed) but a genuine multi-teacher ensemble (Gemini/Qwen/Llama/
-      etc.) requires credentials this environment doesn't have configured.
+- [x] **Phase 11 — Teacher data factory**: a `Teacher` interface
+      (provider/model/capabilities) over Ollama (local, no API key) and
+      Anthropic (cloud), a roster built from `.env` with capability-based
+      routing (`teachers/roster.py` -- not every teacher answers every
+      question category), and rich per-(problem, teacher) `Trajectory`
+      records (question, teacher, prompt_version, answer, verifier_result,
+      extracted_answer, quality_score, disagreement_score) rather than
+      flat Q&A pairs. Design choice, stated plainly: teachers are never
+      trusted to invent new problems+answers from scratch (unverifiable);
+      they write explanations for problems Phase 5's generators already
+      know the correct answer to, and only explanations whose stated
+      final answer verifies correct become SFT data -- diversity/quality
+      from stronger models, without trusting anything unverifiable.
+      Ollama models cycle pull -> generate -> delete -> next (never
+      deletes a model that was already present before the run started).
+      48 tests. 289/289 tests passing overall.
+
+      **Real infrastructure bugs found and fixed during the actual run**
+      (not just theoretical -- each one broke a real run before the fix):
+      a Windows cp1252-vs-unicode crash in the `ollama pull` subprocess
+      reader threads; multi-hundred-KB output-capture bloat from the
+      redrawing progress bar (fixed by discarding stdout, not capturing
+      it); an uncaught `subprocess.TimeoutExpired` on a stalled pull that
+      crashed the *entire* run and nearly lost three teachers' already-
+      collected results (fixed: caught + retried, and the script now
+      checkpoints all results to disk after every single teacher, not
+      once at the end, specifically so one teacher's failure can never
+      erase another's success).
+
+      **Real run**: roster = gemma3:4b, qwen3.5:9b, llama3.2:latest,
+      mistral:latest, deepseek-r1:8b (all local via Ollama) + claude-opus-5
+      (API). 25 verifiable problems (arithmetic + linear_equation, the
+      Phase 10.5 baseline's weak spot) x 6 teachers. Local teachers:
+      **109/124 accepted (87.9%)** -- gemma3:4b 92%, qwen3.5:9b 100%,
+      llama3.2 84%, mistral 64%, deepseek-r1:8b 100% (24/24, one
+      generation timeout skipped gracefully, not a crash) -- several
+      clearing NeuraQuill's own raw reasoning accuracy (35-40%) by a wide
+      margin, validating the core premise. **Claude Opus 5 contributed
+      zero examples**: every call returned HTTP 400 "credit balance too
+      low" -- a real account/billing gap, not a code or quality problem;
+      the pipeline is ready the moment credits are added.
+
+      **Then a second honest negative result, sharper than Phase 6's**:
+      fine-tuned the Phase 10.5 100M reasoning checkpoint (36.7% baseline)
+      on the 109 verified teacher examples (99 train / 10 val, 400 steps)
+      and re-evaluated on the *same* held-out seed. Result: **20.0%** --
+      a real regression, not noise. Train loss collapsed to 0.009 while
+      val loss climbed back up after step 100 (textbook overfitting), and
+      generations show it: garbled, confabulated arithmetic and
+      degenerate repetition where the pre-finetune checkpoint was clean.
+      99 examples spanning 5 very different teacher writing styles, at a
+      peak LR tuned for a much larger/more uniform dataset, was enough to
+      corrupt an already-converged checkpoint's output format rather than
+      extend it. **This checkpoint is not adopted** -- the Phase 5/10.5
+      reasoning checkpoints remain the best available. Lesson for next
+      time this is revisited: either far more teacher volume, blending
+      teacher data into the *original* template dataset instead of a
+      pure continuation fine-tune, or a much gentler LR/step count with
+      early stopping at the first val-loss uptick (step ~50, not 100).
 - [ ] **Phase 12 — Verifiable RL**: extend Phase 5/6's verifier-driven
       approach with an actual RL loop (not just DPO) for math/logic/coding,
       using a code-execution sandbox (a real one, with process isolation/

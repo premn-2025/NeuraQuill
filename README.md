@@ -24,8 +24,24 @@ current status.
 | 9 | Agents | ✅ implemented + tested (20 tests) + real run |
 | 10 | Scale up (100M) | ✅ implemented + tested (3 tests) + real run |
 | 10.5 | Baseline evaluation | ✅ `scripts/baseline_eval.py` + `reports/*.json` |
+| 11 | Teacher data factory | ✅ implemented + tested (48 tests) + real run (mixed result, honestly reported) |
 
-**241/241 tests passing.**
+**289/289 tests passing.**
+
+## Phase 11: teacher data factory
+
+A `Teacher` interface over local Ollama models (no API key) and Claude
+(API), routed by capability, generating verified reasoning explanations
+-- see `teachers/` and `scripts/generate_teacher_data.py`. Real run: 25
+problems x 6 teachers, **109/124 local-teacher examples verified correct
+(87.9%)**, several teachers clearing NeuraQuill's own raw reasoning
+accuracy by a wide margin (qwen3.5:9b and deepseek-r1:8b both hit 100%).
+Claude Opus 5 contributed 0 examples -- API billing/credits issue, not a
+code problem. Fine-tuning NeuraQuill-100M on the 109 examples was then a
+**real negative result**: reasoning accuracy went 36.7% → 20.0%, an
+overfitting regression from too little data spread across too many
+writing styles -- reported as-is, checkpoint not adopted. Full write-up,
+including two real infra bugs found and fixed mid-run, in PLAN.md Phase 11.
 
 ## NeuraQuill-10M vs NeuraQuill-100M (Phase 10.5 baseline)
 

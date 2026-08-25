@@ -1,3 +1,6 @@
+# secrets -- never commit
+.env
+
 # large / generated artifacts -- not source, don't commit
 data/gutenberg_raw/
 data/*.bin
