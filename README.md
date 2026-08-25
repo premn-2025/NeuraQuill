@@ -17,15 +17,22 @@ current status.
 | 2 | Transformer architecture (attention, MLP, blocks) | ✅ implemented + tested (22 tests) |
 | 3 | Training loop (NeuraQuill-10M pretraining) | ✅ implemented + tested (16 tests) + real run |
 | 4 | Instruction tuning (SFT + chat) | ✅ implemented + tested (19 tests) + real run |
-| 5+ | Reasoning/verifiers, DPO, tools, RAG, agents | not started |
+| 5 | Reasoning data + verifiers | ✅ implemented + tested (49 tests) + real run |
+| 6+ | DPO, tools, RAG, agents | not started |
 
-**102/102 tests passing.** NeuraQuill-10M's real runs (RTX 4060):
+**151/151 tests passing.** NeuraQuill-10M's real runs (RTX 4060):
 - Pretraining: 4000 steps on 2.375M filtered tokens from 15 public-domain
   books, val_loss 8.98 → 3.82 (perplexity ≈ 46), ~15 min.
 - SFT: 3000 steps on 13,378 filtered Dolly-15k conversations, val_loss
   8.05 → 3.70, ~12 min. `scripts/chat.py` gives correctly-formatted,
   correctly-terminated chat responses that aren't yet coherent/factual --
   expected at this scale, not a pipeline bug.
+- Reasoning: fine-tuned further on 3000 self-verifying synthetic
+  problems, then evaluated on 60 fresh unseen problems: **6.7% → 40.0%**
+  accuracy. Logic/comparison reasoning hit 100% (genuine transitive
+  reasoning, not memorization); arithmetic stayed weak (~11%) because the
+  model learned the *procedure* but not exact computation -- the gap
+  tool-calling (Phase 7) is meant to close.
 - Content filter verified with zero blocklist-term matches in both
   training corpora and in sampled generations.
 

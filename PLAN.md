@@ -51,9 +51,30 @@ green → only then move to the next phase. No phase is "done" without tests.
       exactly as expected for a 10M-param model with ~15min pretrain +
       ~12min SFT. Scale (Phase 10) is what closes that gap, not this
       phase's job.
-- [ ] **Phase 5 — Reasoning data + verifiers**: synthetic verifiable math/
-      logic problems, a Python-sandbox verifier, reward computation. Tests:
-      verifier correctly grades known right/wrong solutions.
+- [x] **Phase 5 — Reasoning data + verifiers**: synthetic self-verifying
+      problem generators (arithmetic, linear equations, transitive
+      comparisons), a genuine AST-walk arithmetic sandbox (whitelist of
+      +-*/ etc. only -- no `eval`, no name/attribute/call access, can't
+      reach `__import__`/`open`/anything), answer extraction, and
+      reward/grading. 49 tests: sandbox correctness + adversarial-input
+      rejection, generator self-consistency (each kind cross-checked by
+      independently recomputing the answer), extraction edge cases,
+      known-right/known-wrong grading, and a 300-problem batch where every
+      problem's own solution must grade correct. Real run: generated 3000
+      problems (100% self-verified), baseline-evaluated the Phase 4 SFT
+      checkpoint on 30 held-out problems (6.7% -- near chance, it never
+      saw math-formatted data), then fine-tuned further on the 3000
+      reasoning conversations (val_loss 3.17 -> 0.15) and re-evaluated on
+      60 *fresh* problems (different seed, unseen during fine-tuning):
+      **40.0% overall** (comparison/logic 100% [19/19] -- genuine
+      transitive reasoning on novel name combinations, not memorization;
+      linear_equation 13.0%, arithmetic 11.1% -- it learned the *format*
+      of showing work perfectly but gets the actual arithmetic wrong,
+      e.g. computing `-86 - (-14)` as `-78` instead of `-72`). This is a
+      well-documented small-transformer failure mode (procedure learned
+      before exact computation) and is exactly the gap Phase 7's
+      tool-calling (a real calculator) is meant to close -- not something
+      to try to train away at this scale.
 - [ ] **Phase 6 — Preference optimization (DPO)**: chosen/rejected pair
       training. Tests: DPO loss decreases, chosen logprob rises relative
       to rejected on a toy pair set.
