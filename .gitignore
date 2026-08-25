@@ -1,0 +1,13 @@
+# large / generated artifacts -- not source, don't commit
+data/gutenberg_raw/
+data/*.bin
+data/*.npz
+data/pretrain_corpus_raw.txt
+data/dolly15k.jsonl
+tokenizer/artifacts/
+tokenizer/artifacts_chat/
+checkpoints/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/

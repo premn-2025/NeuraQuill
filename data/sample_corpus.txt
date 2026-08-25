@@ -1,0 +1,99 @@
+The quick brown fox jumps over the lazy dog. Machine learning models learn patterns from data.
+A transformer is a neural network architecture that relies entirely on attention mechanisms.
+Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) V
+def maximum(arr):
+    return max(arr)
+
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+class LinearLayer:
+    def __init__(self, in_features, out_features):
+        self.weight = None
+        self.bias = None
+
+    def forward(self, x):
+        return x @ self.weight + self.bias
+
+SELECT name, age FROM users WHERE age > 18 ORDER BY name ASC;
+INSERT INTO logs (message, level) VALUES ('startup complete', 'INFO');
+
+Recursion is a technique where a function calls itself to solve smaller instances of a problem.
+The largest element in an array [1, 5, 3] is 5.
+Solve: 3x + 7 = 22 -> 3x = 15 -> x = 5
+Solve: 2x + 5 = 15 -> x = 5
+
+All cats are animals. Tom is a cat. Therefore Tom is an animal.
+A is taller than B. B is taller than C. Therefore A is taller than C.
+
+Coimbatore is a city in Tamil Nadu, India. The weather today is sunny with a light breeze.
+PyTorch is an open-source machine learning framework developed by Meta AI.
+CUDA allows PyTorch to run tensor operations on NVIDIA GPUs such as the RTX 4060.
+
+Hyperparameters typically include learning rate, batch size, number of layers, and hidden size.
+Gradient descent updates parameters in the direction that minimizes the loss function.
+loss.backward()
+optimizer.step()
+optimizer.zero_grad()
+
+Natural language processing enables computers to understand and generate human language.
+Tokenization splits raw text into smaller units called tokens before feeding it into a model.
+Byte pair encoding merges the most frequent adjacent pairs of symbols iteratively.
+
+def train_step(model, batch, optimizer):
+    optimizer.zero_grad()
+    logits = model(batch.input_ids)
+    loss = cross_entropy(logits, batch.targets)
+    loss.backward()
+    optimizer.step()
+    return loss.item()
+
+import numpy as np
+import torch
+import torch.nn as nn
+
+array = np.array([1, 2, 3, 4, 5])
+tensor = torch.tensor([1.0, 2.0, 3.0])
+
+The database stores user records, including name, email, and creation timestamp.
+Vector databases such as pgvector enable efficient similarity search over embeddings.
+Retrieval augmented generation combines a retriever with a language model to answer questions
+using external documents instead of relying purely on memorized knowledge.
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, int(n ** 0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+Testing is a critical part of software engineering. Unit tests verify that individual
+functions behave correctly, while integration tests verify that components work together.
+
+print("Hello, world!")
+print(f"The answer is {42}")
+
+Some example sentences with punctuation: Wait, what?! Really... Yes, absolutely!
+He said, "I'll be there by 5 PM," and then he left.
+
+Multilingual example text: Bonjour le monde. Hola mundo. こんにちは世界. 你好，世界。
+Emoji example: I love debugging 🐛 and shipping features 🚀 and drinking coffee ☕.
+
+def binary_search(arr, target):
+    low, high = 0, len(arr) - 1
+    while low <= high:
+        mid = (low + high) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            low = mid + 1
+        else:
+            high = mid - 1
+    return -1
+
+A good tokenizer should never fail on unseen input; byte-level BPE guarantees this because
+every unicode string can be represented as a sequence of UTF-8 bytes, and every byte maps
+to a token in the base vocabulary even if no merge rule ever combined it with anything else.

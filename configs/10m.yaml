@@ -1,0 +1,9 @@
+# NeuraQuill-10M: the first real pretraining target (Phase 3).
+# Sized to comfortably fit and train on a single RTX 4060 (8GB).
+vocab_size: 8192
+block_size: 512
+n_layer: 6
+n_head: 5
+n_embd: 320
+dropout: 0.0
+bias: true
