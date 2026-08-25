@@ -75,9 +75,33 @@ green → only then move to the next phase. No phase is "done" without tests.
       before exact computation) and is exactly the gap Phase 7's
       tool-calling (a real calculator) is meant to close -- not something
       to try to train away at this scale.
-- [ ] **Phase 6 — Preference optimization (DPO)**: chosen/rejected pair
-      training. Tests: DPO loss decreases, chosen logprob rises relative
-      to rejected on a toy pair set.
+- [x] **Phase 6 — Preference optimization (DPO)**: chosen/rejected pair
+      training against a frozen reference model, no reward model, no RL
+      loop (`training/dpo.py`). Preference pairs built on Phase 5's
+      verifier (`verifiers/preference.py`): chosen = a problem's real
+      verified-correct solution, rejected = the same solution corrupted
+      at the final step (wrong number / flipped conclusion) -- so
+      "better" is verifiable by construction, same as Phase 5's data.
+      13 tests: preference-pair self-consistency, `sequence_logprob`
+      matches independent manual log-softmax-gather computation and
+      correctly excludes masked (non-assistant) positions, the core DPO
+      invariant (loss = ln(2) exactly when policy==reference, regardless
+      of data), and an end-to-end overfit test. 164/164 tests passing
+      overall. **Real run and an honest negative result**: DPO'd the
+      Phase 5 reasoning-tuned checkpoint on 2850 preference pairs, 1000
+      steps -- the *preference* objective moved exactly as it should
+      (val_loss ln(2)=0.693 -> ~0.34-0.42, accuracy 75% -> ~85%, margin
+      0.0 -> ~2-3), but re-evaluating actual generation accuracy on 60
+      fresh reasoning problems went **40.0% -> 33.3%** (arithmetic
+      specifically dropped 11.1% -> 0%). Optimizing the preference proxy
+      did not transfer to better task accuracy here, and arguably hurt
+      it slightly -- a real, well-documented DPO/RLHF failure mode
+      (reward/preference metrics improving while held-out task
+      performance doesn't follow), not a bug in the implementation. At
+      10M params with a narrow, synthetic preference set, this isn't
+      surprising; noted here rather than smoothed over. The Phase 5
+      reasoning checkpoint (`neuraquill-10m-reasoning.pt`, 40.0%) remains
+      the better checkpoint to build on going forward.
 - [ ] **Phase 7 — Tool calling**: structured tool-call format + orchestrator
       that executes tools and feeds results back. Tests: correct tool JSON
       parsing, execution round-trip, error handling on bad tool output.
