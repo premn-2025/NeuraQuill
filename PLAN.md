@@ -303,18 +303,74 @@ green → only then move to the next phase. No phase is "done" without tests.
       11's negative result showed the failure was training strategy
       (too little data, too little stylistic consistency, LR tuned for
       the wrong data scale), not data quality:
-  - [ ] **12A — Build a large, balanced, verified dataset.** Scale the
-        Phase 11 teacher factory volume up substantially (thousands, not
-        109), across categories (math/logic/coding/general/tool-use),
-        and combine it *with* the original template/instruction data
-        rather than replacing it -- Phase 11's checkpoint was corrupted
-        by training on teacher data alone.
-  - [ ] **12B — Controlled SFT experiments**, same starting checkpoint,
-        varied only in data mixture: (A) baseline/no further SFT, (B)
-        original data only, (C) teacher data only, (D) mixed. Compare
-        all four against the Phase 10.5 baseline categories before
-        adopting anything -- the hypothesis is (D) beats (C), but that
-        gets measured, not assumed.
+  - [x] **12A — Build a large, balanced, verified dataset.** Added 2 new
+        local teachers to the roster (`glm4:9b`, `command-r7b:latest` --
+        picked over larger 24B/30B alternatives an outside consultant
+        suggested, rejected as too large for the RTX 4060's proven-safe
+        ~8GB VRAM zone), and a persistent, hard-enforced Anthropic spend
+        tracker (`teachers/spend_tracker.py`) since real API credits were
+        wired in mid-phase -- checked *before* every call, refuses rather
+        than overspends. Real run: 150 problems x 7 local teachers (no
+        Claude -- account credits weren't actually active despite being
+        enabled, a real billing-propagation issue, not a code problem) ->
+        **925/1044 verified (88.6%)**, both new teachers strong (glm4:9b
+        91%, command-r7b 95%) -- 8.5x the Phase 11 volume.
+  - [x] **12B — Controlled SFT experiments**, same starting checkpoint
+        (`neuraquill-100m-sft.pt`, pre-reasoning-tuning), same fixed
+        recipe (600 steps, lr 3e-5, gentler than Phase 11's 8e-5) across
+        conditions, varied only in data mixture. **Results, and a finding
+        sharper than Phase 11's**:
+
+        | condition | data | reasoning accuracy |
+        |---|---|---|
+        | A — no reasoning tuning | none | 1.7% |
+        | B — original only | 2850 template examples | 25-26.7% |
+        | C — teacher only | 833 verified teacher examples | **0.0%** |
+        | D — mixed | 3729 (original + teacher) | 10-16.7% |
+        | reference (Phase 5/10.5, original recipe) | 2850, 2000 steps @ lr 8e-5 | **36.7%** |
+
+        All rejected by `scripts/evaluate_and_gate.py` against the 36.7%
+        reference; none adopted. Two real findings, not one:
+
+        1. **More teacher data made it *worse*, not better** (833 vs
+           Phase 11's 109 -> 0.0% vs 20.0%), ruling out "just needed more
+           volume" as the fix. Transcripts show genuine incoherence --
+           hallucinated numbers unrelated to the question, degenerate
+           repetition, procedures from the wrong problem type -- not an
+           answer-extraction artifact (checked directly against raw
+           generations, not just the accuracy number). C's val_loss curve
+           looked perfectly healthy (monotonic 4.15 -> 0.76, no
+           overfitting spike), yet downstream accuracy collapsed anyway
+           -- **a clean validation-loss curve does not certify that a
+           small model actually retained the skill being measured**,
+           only that it fit the token distribution of that specific
+           validation split. The likely mechanism: 833 examples spanning
+           7 stylistically incompatible teacher "voices" (markdown vs.
+           plain text, LaTeX vs. arithmetic notation, verbose vs. terse)
+           gives a 100M model conflicting output-format signal it doesn't
+           have the capacity to reconcile, corrupting coherent generation
+           rather than extending it.
+        2. **Condition B, same data as the reference, same starting
+           checkpoint, undertrained relative to the reference recipe**
+           (25-26.7% vs 36.7%) -- the deliberately gentler LR/step count
+           chosen specifically to avoid repeating Phase 11's overfitting
+           undertrained on this *uniform, single-format* dataset, where
+           the original, more aggressive recipe (2000 steps @ 8e-5) was
+           actually fine. The lesson isn't "always use a gentler
+           recipe" -- it's that recipe and data consistency interact:
+           aggressive hyperparameters are safe on stylistically uniform
+           data and dangerous on heterogeneous data, and Phase 11
+           conflated the two.
+
+        **Next time teacher data is revisited**: normalize/rewrite
+        teacher explanations into one consistent presentation format
+        before training on them (keep the teachers' correct *content*,
+        discard their raw stylistic diversity), or use teacher data as a
+        much smaller proportion of the mix (closer to 1:10 than 1:3.4),
+        rather than assuming either "more data" or "gentler LR" alone
+        fixes what is actually a format-consistency problem. The Phase
+        5/10.5 reasoning checkpoint (36.7%) remains the best available
+        for this category, confirmed twice now.
   - [ ] **12C — A real verifier/reward environment**: records
         (question, candidate, tool_calls, verification, reward) per
         attempt, not just question->answer; a real process-isolated

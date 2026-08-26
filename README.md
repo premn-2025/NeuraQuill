@@ -25,8 +25,10 @@ current status.
 | 10 | Scale up (100M) | ✅ implemented + tested (3 tests) + real run |
 | 10.5 | Baseline evaluation | ✅ `scripts/baseline_eval.py` + `reports/*.json` |
 | 11 | Teacher data factory | ✅ implemented + tested (48 tests) + real run (mixed result, honestly reported) |
+| 12A | Larger verified dataset + spend-tracked Claude | ✅ real run (925 examples, 7 local teachers) |
+| 12B | Controlled SFT experiments (baseline/original/teacher/mixed) | ✅ real run (informative negative result) |
 
-**289/289 tests passing.**
+**315/315 tests passing.**
 
 ## Phase 11: teacher data factory
 
@@ -42,6 +44,32 @@ code problem. Fine-tuning NeuraQuill-100M on the 109 examples was then a
 overfitting regression from too little data spread across too many
 writing styles -- reported as-is, checkpoint not adopted. Full write-up,
 including two real infra bugs found and fixed mid-run, in PLAN.md Phase 11.
+
+## Phase 12A/12B: more data didn't fix it -- a sharper finding
+
+Added 2 new local teachers (`glm4:9b`, `command-r7b`) and a hard-enforced,
+persistent Anthropic spend tracker (`teachers/spend_tracker.py` -- checked
+*before* every call, never overspends). Scaled the teacher run to 150
+problems x 7 teachers: **925/1044 verified (88.6%)**, 8.5x Phase 11's
+volume. Then ran a controlled 4-way SFT comparison (same checkpoint, same
+recipe, only the data mixture varied) via `scripts/evaluate_and_gate.py`:
+
+| condition | reasoning accuracy |
+|---|---|
+| no reasoning tuning | 1.7% |
+| original data only | 25-26.7% |
+| teacher data only (833 examples) | **0.0%** |
+| mixed (3729 examples) | 10-16.7% |
+| reference (original recipe) | **36.7%** |
+
+All four rejected by the evaluation gate. **More teacher data made things
+worse, not better** (0.0% vs. Phase 11's 20.0% with 8x less data), ruling
+out "just needed more volume." Real generation transcripts confirm actual
+incoherence, not an extraction artifact -- and the training loss curve
+looked perfectly healthy throughout, meaning a clean val-loss curve does
+not certify a small model retained the skill being measured. Likely
+mechanism and next steps in PLAN.md Phase 12B. Reference checkpoint
+(36.7%) remains the best, confirmed twice now.
 
 ## NeuraQuill-10M vs NeuraQuill-100M (Phase 10.5 baseline)
 
