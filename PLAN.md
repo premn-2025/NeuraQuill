@@ -464,14 +464,43 @@ green → only then move to the next phase. No phase is "done" without tests.
         weights to contain everything -- reserve the weights for
         classification/routing/concise reasoning, which is what they're
         actually positioned to do well.
-  - [ ] **12H — Capacity scaling experiment**: the exact same dataset and
-        recipe from 12E/12F run across 100M -> 300M -> 500M -> 1B (config
-        change only, per Phase 10's proof that the pipeline scales this
-        way) to find out empirically whether remaining headroom is a
-        data problem or a capacity problem, rather than guessing. Target
-        framed incrementally (36.7% -> 50% -> 65% -> ...), not jumping
-        straight to a headline number -- a benchmark chased directly is a
-        benchmark optimized, not a model that generalizes.
+  - [ ] **12H — Capacity scaling experiment** (in progress). Preserved
+        the confirmed tool-calling checkpoint first, as a frozen reference
+        point: `checkpoints/neuraquill-100m-tool-v1.pt`
+        (99% on the 12C/12G problem set). `configs/300m.yaml`: n_layer=23,
+        n_head=16, n_embd=1024, **same vocab_size=8192 and block_size=512
+        as the 100M config** -- tokenizer, pretraining corpus, SFT data,
+        and reasoning data all held identical; capacity is the only
+        variable changed, so this is a real controlled comparison, not a
+        confounded one. 298.6M params.
+
+        **A real, disclosed compromise**: at `batch_size=4` the 300M
+        model overflows the RTX 4060's 8GB VRAM the same way the 100M
+        model did at `batch_size=16` (same slow-shared-memory-spillover
+        failure mode, not a clean OOM) -- `batch_size=2` is the safe
+        ceiling, ~3x slower per token than the 100M config (expected: 3x
+        the parameters). Matching the 100M run's full 65.5M-token
+        exposure (4000 steps @ effective batch 32) would take ~8+ hours
+        of continuous pretraining alone; scaled down to **1500 steps @
+        effective batch 32** (`batch_size=2` x `grad_accum_steps=16`,
+        same effective batch as the 100M run) -- ~24.6M tokens, ~3.1
+        epochs vs. the 100M run's ~8.2 epochs. This is a real, disclosed
+        difference between the two runs, not hidden -- if 300M still
+        beats 100M under a *smaller* token budget, that's a stronger
+        capacity signal, not a weaker one; if it doesn't, the comparison
+        needs the full budget before concluding anything, which is the
+        honest caveat to carry into the results.
+
+        Per the explicit steer for this phase: **arithmetic accuracy is
+        not the target metric here** -- Phase 7/12G already solved that
+        via tool-calling (99%), so a capacity win on raw arithmetic
+        wouldn't be informative. The categories that matter for this
+        experiment are the ones tool-calling *can't* already cover:
+        general QA, multi-step reasoning/planning, coding, and tool-
+        selection accuracy (does the model correctly decide *when* to
+        call a tool, not just execute correctly once it does) --
+        `scripts/baseline_eval.py`'s categories plus whatever 12I's
+        reward environment adds.
   - [ ] **12I — A real verifier/reward environment**: records
         (question, candidate, tool_calls, verification, reward) per
         attempt, not just question->answer; a real process-isolated

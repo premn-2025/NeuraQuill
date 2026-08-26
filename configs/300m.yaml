@@ -1,0 +1,12 @@
+# NeuraQuill-300M: Phase 12H's capacity-scaling target. Deliberately
+# holds everything constant except capacity vs. the 100M config -- same
+# tokenizer (vocab_size=8192), same block_size, same training pipeline --
+# so 100M vs 300M is a clean capacity comparison, not a confounded one.
+# 298.6M params.
+vocab_size: 8192
+block_size: 512
+n_layer: 23
+n_head: 16
+n_embd: 1024
+dropout: 0.0
+bias: true
