@@ -1,0 +1,802 @@
+[
+  {
+    "question": "Solve for x: 10x + -1 = -91",
+    "kind": "linear_equation",
+    "expected": "-9",
+    "reply": "10x + -1 = -91\n10x = -80\nx = -8",
+    "extracted": "-8",
+    "correct": false
+  },
+  {
+    "question": "What is 27 * 49?",
+    "kind": "arithmetic",
+    "expected": "1323",
+    "reply": "27 * 49 = 1261",
+    "extracted": "1261",
+    "correct": false
+  },
+  {
+    "question": "Emma is taller than Henry. Henry is taller than Bob. Is Bob taller than Henry?",
+    "kind": "comparison",
+    "expected": "No",
+    "reply": "Emma is taller than Henry. Henry is taller than Bob. Since Bob comes after Henry in the height ordering, the answer is No.",
+    "extracted": "No",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 9x + 19 = 73",
+    "kind": "linear_equation",
+    "expected": "6",
+    "reply": "9x + 19 = 73\n9x = 63\nx = 6",
+    "extracted": "6",
+    "correct": true
+  },
+  {
+    "question": "What is 35 - 46?",
+    "kind": "arithmetic",
+    "expected": "-11",
+    "reply": "35 - 46 = -9",
+    "extracted": "-9",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 2x + -7 = 19",
+    "kind": "linear_equation",
+    "expected": "13",
+    "reply": "2x + -7 = 19\n2x = 36\nx = 9",
+    "extracted": "9",
+    "correct": false
+  },
+  {
+    "question": "Henry is taller than Frank. Frank is taller than Grace. Is Henry taller than Grace?",
+    "kind": "comparison",
+    "expected": "Yes",
+    "reply": "Henry is taller than Frank. Frank is taller than Grace. Since Henry comes before Grace in the height ordering, the answer is Yes.",
+    "extracted": "Yes",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 6x + 20 = -82",
+    "kind": "linear_equation",
+    "expected": "-17",
+    "reply": "6x + 20 = -82\n6x = -84\nx = -14",
+    "extracted": "-14",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 2x + -12 = 6",
+    "kind": "linear_equation",
+    "expected": "9",
+    "reply": "2x + -12 = 6\n2x = 18\nx = 9",
+    "extracted": "9",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 6x + 2 = 26",
+    "kind": "linear_equation",
+    "expected": "4",
+    "reply": "6x + 2 = 26\n6x = 16\nx = 3",
+    "extracted": "3",
+    "correct": false
+  },
+  {
+    "question": "What is 28 - 27?",
+    "kind": "arithmetic",
+    "expected": "1",
+    "reply": "28 - 27 = 11",
+    "extracted": "11",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 4x + 6 = 70",
+    "kind": "linear_equation",
+    "expected": "16",
+    "reply": "4x + 6 = 70\n4x = 72\nx = 14",
+    "extracted": "14",
+    "correct": false
+  },
+  {
+    "question": "What is 3 + 48?",
+    "kind": "arithmetic",
+    "expected": "51",
+    "reply": "3 + 48 = 55",
+    "extracted": "55",
+    "correct": false
+  },
+  {
+    "question": "What is 17 + 33?",
+    "kind": "arithmetic",
+    "expected": "50",
+    "reply": "17 + 33 = 41",
+    "extracted": "41",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 7x + 19 = 131",
+    "kind": "linear_equation",
+    "expected": "16",
+    "reply": "7x + 19 = 131\n7x = 135\nx = 15",
+    "extracted": "15",
+    "correct": false
+  },
+  {
+    "question": "What is 42 - 39?",
+    "kind": "arithmetic",
+    "expected": "3",
+    "reply": "42 - 39 = 15",
+    "extracted": "15",
+    "correct": false
+  },
+  {
+    "question": "What is 30 + 24?",
+    "kind": "arithmetic",
+    "expected": "54",
+    "reply": "30 + 24 = 40",
+    "extracted": "40",
+    "correct": false
+  },
+  {
+    "question": "What is 24 + 32?",
+    "kind": "arithmetic",
+    "expected": "56",
+    "reply": "24 + 32 = 56",
+    "extracted": "56",
+    "correct": true
+  },
+  {
+    "question": "Carol is taller than Henry. Henry is taller than Dave. Is Dave taller than Henry?",
+    "kind": "comparison",
+    "expected": "No",
+    "reply": "Carol is taller than Henry. Henry is taller than Dave. Since Dave comes after Henry in the height ordering, the answer is No.",
+    "extracted": "No",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 3x + -12 = 15",
+    "kind": "linear_equation",
+    "expected": "9",
+    "reply": "3x + -12 = 15\n3x = 12\nx = 3",
+    "extracted": "3",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 10x + -16 = -86",
+    "kind": "linear_equation",
+    "expected": "-7",
+    "reply": "10x + -16 = -86\n10x = -80\nx = -8",
+    "extracted": "-8",
+    "correct": false
+  },
+  {
+    "question": "What is 1 + 10?",
+    "kind": "arithmetic",
+    "expected": "11",
+    "reply": "1 + 10 = 12",
+    "extracted": "12",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 6x + -6 = -36",
+    "kind": "linear_equation",
+    "expected": "-5",
+    "reply": "6x + -6 = -36\n6x = -32\nx = -11",
+    "extracted": "-11",
+    "correct": false
+  },
+  {
+    "question": "What is 19 + 16?",
+    "kind": "arithmetic",
+    "expected": "35",
+    "reply": "19 + 16 = 31",
+    "extracted": "31",
+    "correct": false
+  },
+  {
+    "question": "Henry is taller than Emma. Emma is taller than Carol. Is Emma taller than Carol?",
+    "kind": "comparison",
+    "expected": "Yes",
+    "reply": "Henry is taller than Emma. Emma is taller than Carol. Since Emma comes before Carol in the height ordering, the answer is Yes.",
+    "extracted": "Yes",
+    "correct": true
+  },
+  {
+    "question": "Grace is taller than Bob. Bob is taller than Alice. Is Bob taller than Alice?",
+    "kind": "comparison",
+    "expected": "Yes",
+    "reply": "Grace is taller than Bob. Bob is taller than Alice. Since Bob comes before Alice in the height ordering, the answer is Yes.",
+    "extracted": "Yes",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 10x + -4 = -124",
+    "kind": "linear_equation",
+    "expected": "-12",
+    "reply": "10x + -4 = -124\n10x = -110\nx = -11",
+    "extracted": "-11",
+    "correct": false
+  },
+  {
+    "question": "Bob is taller than Dave. Dave is taller than Henry. Is Bob taller than Dave?",
+    "kind": "comparison",
+    "expected": "Yes",
+    "reply": "Bob is taller than Dave. Dave is taller than Henry. Since Bob comes before Dave in the height ordering, the answer is Yes.",
+    "extracted": "Yes",
+    "correct": true
+  },
+  {
+    "question": "What is 15 * 21?",
+    "kind": "arithmetic",
+    "expected": "315",
+    "reply": "15 * 21 = 315",
+    "extracted": "315",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 10x + 14 = -166",
+    "kind": "linear_equation",
+    "expected": "-18",
+    "reply": "10x + 14 = -166\n10x = -150\nx = -15",
+    "extracted": "-15",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 2x + -13 = 27",
+    "kind": "linear_equation",
+    "expected": "20",
+    "reply": "2x + -13 = 27\n2x = 40\nx = 20",
+    "extracted": "20",
+    "correct": true
+  },
+  {
+    "question": "What is 34 + 9?",
+    "kind": "arithmetic",
+    "expected": "43",
+    "reply": "34 + 9 = 42",
+    "extracted": "42",
+    "correct": false
+  },
+  {
+    "question": "What is 40 * 6?",
+    "kind": "arithmetic",
+    "expected": "240",
+    "reply": "40 * 6 = 260",
+    "extracted": "260",
+    "correct": false
+  },
+  {
+    "question": "Carol is taller than Bob. Bob is taller than Dave. Is Dave taller than Carol?",
+    "kind": "comparison",
+    "expected": "No",
+    "reply": "Carol is taller than Bob. Bob is taller than Dave. Since Dave comes after Carol in the height ordering, the answer is No.",
+    "extracted": "No",
+    "correct": true
+  },
+  {
+    "question": "What is 9 + 40?",
+    "kind": "arithmetic",
+    "expected": "49",
+    "reply": "9 + 40 = 56",
+    "extracted": "56",
+    "correct": false
+  },
+  {
+    "question": "What is 36 * 39?",
+    "kind": "arithmetic",
+    "expected": "1404",
+    "reply": "36 * 39 = 1482",
+    "extracted": "1482",
+    "correct": false
+  },
+  {
+    "question": "Alice is taller than Emma. Emma is taller than Henry. Is Henry taller than Alice?",
+    "kind": "comparison",
+    "expected": "No",
+    "reply": "Alice is taller than Emma. Emma is taller than Henry. Since Henry comes after Alice in the height ordering, the answer is No.",
+    "extracted": "No",
+    "correct": true
+  },
+  {
+    "question": "Frank is taller than Alice. Alice is taller than Grace. Is Alice taller than Frank?",
+    "kind": "comparison",
+    "expected": "No",
+    "reply": "Frank is taller than Alice. Alice is taller than Grace. Since Alice comes after Frank in the height ordering, the answer is No.",
+    "extracted": "No",
+    "correct": true
+  },
+  {
+    "question": "What is 7 + 41?",
+    "kind": "arithmetic",
+    "expected": "48",
+    "reply": "7 + 41 = 53",
+    "extracted": "53",
+    "correct": false
+  },
+  {
+    "question": "Dave is taller than Emma. Emma is taller than Bob. Is Bob taller than Dave?",
+    "kind": "comparison",
+    "expected": "No",
+    "reply": "Dave is taller than Emma. Emma is taller than Bob. Since Bob comes after Dave in the height ordering, the answer is No.",
+    "extracted": "No",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 8x + 0 = -72",
+    "kind": "linear_equation",
+    "expected": "-9",
+    "reply": "8x + 0 = -72\n8x = -84\nx = -9",
+    "extracted": "-9",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 8x + -7 = 65",
+    "kind": "linear_equation",
+    "expected": "9",
+    "reply": "8x + -7 = 65\n8x = 80\nx = 10",
+    "extracted": "10",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 8x + 6 = 142",
+    "kind": "linear_equation",
+    "expected": "17",
+    "reply": "8x + 6 = 142\n8x = 152\nx = 19",
+    "extracted": "19",
+    "correct": false
+  },
+  {
+    "question": "Carol is taller than Bob. Bob is taller than Grace. Is Bob taller than Grace?",
+    "kind": "comparison",
+    "expected": "Yes",
+    "reply": "Carol is taller than Bob. Bob is taller than Grace. Since Bob comes before Grace in the height ordering, the answer is Yes.",
+    "extracted": "Yes",
+    "correct": true
+  },
+  {
+    "question": "What is 23 + 30?",
+    "kind": "arithmetic",
+    "expected": "53",
+    "reply": "23 + 30 = 52",
+    "extracted": "52",
+    "correct": false
+  },
+  {
+    "question": "Alice is taller than Henry. Henry is taller than Carol. Is Carol taller than Alice?",
+    "kind": "comparison",
+    "expected": "No",
+    "reply": "Alice is taller than Henry. Henry is taller than Carol. Since Carol comes after Alice in the height ordering, the answer is No.",
+    "extracted": "No",
+    "correct": true
+  },
+  {
+    "question": "What is 27 * 43?",
+    "kind": "arithmetic",
+    "expected": "1161",
+    "reply": "27 * 43 = 1268",
+    "extracted": "1268",
+    "correct": false
+  },
+  {
+    "question": "What is 39 + 30?",
+    "kind": "arithmetic",
+    "expected": "69",
+    "reply": "39 + 30 = 72",
+    "extracted": "72",
+    "correct": false
+  },
+  {
+    "question": "Henry is taller than Emma. Emma is taller than Alice. Is Emma taller than Alice?",
+    "kind": "comparison",
+    "expected": "Yes",
+    "reply": "Henry is taller than Emma. Emma is taller than Alice. Since Emma comes before Alice in the height ordering, the answer is Yes.",
+    "extracted": "Yes",
+    "correct": true
+  },
+  {
+    "question": "What is 22 * 36?",
+    "kind": "arithmetic",
+    "expected": "792",
+    "reply": "22 * 36 = 324",
+    "extracted": "324",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 4x + 18 = -22",
+    "kind": "linear_equation",
+    "expected": "-10",
+    "reply": "4x + 18 = -22\n4x = -40\nx = -10",
+    "extracted": "-10",
+    "correct": true
+  },
+  {
+    "question": "What is 5 - 9?",
+    "kind": "arithmetic",
+    "expected": "-4",
+    "reply": "5 - 9 = -4",
+    "extracted": "-4",
+    "correct": true
+  },
+  {
+    "question": "What is 22 + 20?",
+    "kind": "arithmetic",
+    "expected": "42",
+    "reply": "22 + 20 = 42",
+    "extracted": "42",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 3x + 3 = 36",
+    "kind": "linear_equation",
+    "expected": "11",
+    "reply": "3x + 3 = 36\n3x = 18\nx = 6",
+    "extracted": "6",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 8x + 19 = 75",
+    "kind": "linear_equation",
+    "expected": "7",
+    "reply": "8x + 19 = 75\n8x = 56\nx = 7",
+    "extracted": "7",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 1x + -13 = -23",
+    "kind": "linear_equation",
+    "expected": "-10",
+    "reply": "1x + -13 = -23\n1x = -10\nx = -10",
+    "extracted": "-10",
+    "correct": true
+  },
+  {
+    "question": "What is 28 - 41?",
+    "kind": "arithmetic",
+    "expected": "-13",
+    "reply": "28 - 41 = -22",
+    "extracted": "-22",
+    "correct": false
+  },
+  {
+    "question": "What is 46 * 7?",
+    "kind": "arithmetic",
+    "expected": "322",
+    "reply": "46 * 7 = 248",
+    "extracted": "248",
+    "correct": false
+  },
+  {
+    "question": "What is 28 * 2?",
+    "kind": "arithmetic",
+    "expected": "56",
+    "reply": "28 * 2 = 46",
+    "extracted": "46",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 2x + 0 = -12",
+    "kind": "linear_equation",
+    "expected": "-6",
+    "reply": "2x + 0 = -12\n2x = -28\nx = -14",
+    "extracted": "-14",
+    "correct": false
+  },
+  {
+    "question": "Carol is taller than Bob. Bob is taller than Emma. Is Emma taller than Carol?",
+    "kind": "comparison",
+    "expected": "No",
+    "reply": "Carol is taller than Bob. Bob is taller than Emma. Since Emma comes after Carol in the height ordering, the answer is No.",
+    "extracted": "No",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 10x + -3 = -143",
+    "kind": "linear_equation",
+    "expected": "-14",
+    "reply": "10x + -3 = -143\n10x = -60\nx = -6",
+    "extracted": "-6",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 3x + -6 = 39",
+    "kind": "linear_equation",
+    "expected": "15",
+    "reply": "3x + -6 = 39\n3x = 42\nx = 14",
+    "extracted": "14",
+    "correct": false
+  },
+  {
+    "question": "What is 8 * 13?",
+    "kind": "arithmetic",
+    "expected": "104",
+    "reply": "8 * 13 = 128",
+    "extracted": "128",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 10x + 6 = 146",
+    "kind": "linear_equation",
+    "expected": "14",
+    "reply": "10x + 6 = 146\n10x = 100\nx = 10",
+    "extracted": "10",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 3x + -5 = 43",
+    "kind": "linear_equation",
+    "expected": "16",
+    "reply": "3x + -5 = 43\n3x = 42\nx = 16",
+    "extracted": "16",
+    "correct": true
+  },
+  {
+    "question": "Emma is taller than Grace. Grace is taller than Carol. Is Carol taller than Grace?",
+    "kind": "comparison",
+    "expected": "No",
+    "reply": "Emma is taller than Grace. Grace is taller than Carol. Since Carol comes after Grace in the height ordering, the answer is No.",
+    "extracted": "No",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 2x + 5 = 45",
+    "kind": "linear_equation",
+    "expected": "20",
+    "reply": "2x + 5 = 45\n2x = 40\nx = 20",
+    "extracted": "20",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 6x + 12 = 0",
+    "kind": "linear_equation",
+    "expected": "-2",
+    "reply": "6x + 12 = 0\n6x = -12\nx = -2",
+    "extracted": "-2",
+    "correct": true
+  },
+  {
+    "question": "Dave is taller than Bob. Bob is taller than Carol. Is Dave taller than Bob?",
+    "kind": "comparison",
+    "expected": "Yes",
+    "reply": "Dave is taller than Bob. Bob is taller than Carol. Since Dave comes before Bob in the height ordering, the answer is Yes.",
+    "extracted": "Yes",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 5x + -2 = 78",
+    "kind": "linear_equation",
+    "expected": "16",
+    "reply": "5x + -2 = 78\n5x = 80\nx = 16",
+    "extracted": "16",
+    "correct": true
+  },
+  {
+    "question": "Dave is taller than Henry. Henry is taller than Frank. Is Frank taller than Dave?",
+    "kind": "comparison",
+    "expected": "No",
+    "reply": "Dave is taller than Henry. Henry is taller than Frank. Since Frank comes after Dave in the height ordering, the answer is No.",
+    "extracted": "No",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 4x + -4 = 12",
+    "kind": "linear_equation",
+    "expected": "4",
+    "reply": "4x + -4 = 12\n4x = 20\nx = 5",
+    "extracted": "5",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 3x + 0 = 39",
+    "kind": "linear_equation",
+    "expected": "13",
+    "reply": "3x + 0 = 39\n3x = 39\nx = 13",
+    "extracted": "13",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 3x + -15 = 27",
+    "kind": "linear_equation",
+    "expected": "14",
+    "reply": "3x + -15 = 27\n3x = 42\nx = 16",
+    "extracted": "16",
+    "correct": false
+  },
+  {
+    "question": "Dave is taller than Henry. Henry is taller than Emma. Is Henry taller than Emma?",
+    "kind": "comparison",
+    "expected": "Yes",
+    "reply": "Dave is taller than Henry. Henry is taller than Emma. Since Henry comes before Emma in the height ordering, the answer is Yes.",
+    "extracted": "Yes",
+    "correct": true
+  },
+  {
+    "question": "What is 34 * 25?",
+    "kind": "arithmetic",
+    "expected": "850",
+    "reply": "34 * 25 = 850",
+    "extracted": "850",
+    "correct": true
+  },
+  {
+    "question": "Emma is taller than Bob. Bob is taller than Dave. Is Bob taller than Emma?",
+    "kind": "comparison",
+    "expected": "No",
+    "reply": "Emma is taller than Bob. Bob is taller than Dave. Since Bob comes after Emma in the height ordering, the answer is No.",
+    "extracted": "No",
+    "correct": true
+  },
+  {
+    "question": "Grace is taller than Frank. Frank is taller than Alice. Is Alice taller than Grace?",
+    "kind": "comparison",
+    "expected": "No",
+    "reply": "Grace is taller than Frank. Frank is taller than Alice. Since Alice comes after Grace in the height ordering, the answer is No.",
+    "extracted": "No",
+    "correct": true
+  },
+  {
+    "question": "What is 40 - 21?",
+    "kind": "arithmetic",
+    "expected": "19",
+    "reply": "40 - 21 = 19",
+    "extracted": "19",
+    "correct": true
+  },
+  {
+    "question": "What is 49 + 38?",
+    "kind": "arithmetic",
+    "expected": "87",
+    "reply": "49 + 38 = 85",
+    "extracted": "85",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 5x + 13 = -77",
+    "kind": "linear_equation",
+    "expected": "-18",
+    "reply": "5x + 13 = -77\n5x = -85\nx = -17",
+    "extracted": "-17",
+    "correct": false
+  },
+  {
+    "question": "What is 11 - 13?",
+    "kind": "arithmetic",
+    "expected": "-2",
+    "reply": "11 - 13 = -1",
+    "extracted": "-1",
+    "correct": false
+  },
+  {
+    "question": "Henry is taller than Grace. Grace is taller than Carol. Is Henry taller than Grace?",
+    "kind": "comparison",
+    "expected": "Yes",
+    "reply": "Henry is taller than Grace. Grace is taller than Carol. Since Henry comes before Grace in the height ordering, the answer is Yes.",
+    "extracted": "Yes",
+    "correct": true
+  },
+  {
+    "question": "What is 38 + 18?",
+    "kind": "arithmetic",
+    "expected": "56",
+    "reply": "38 + 18 = 46",
+    "extracted": "46",
+    "correct": false
+  },
+  {
+    "question": "What is 25 * 38?",
+    "kind": "arithmetic",
+    "expected": "950",
+    "reply": "25 * 38 = 550",
+    "extracted": "550",
+    "correct": false
+  },
+  {
+    "question": "Bob is taller than Henry. Henry is taller than Emma. Is Bob taller than Emma?",
+    "kind": "comparison",
+    "expected": "Yes",
+    "reply": "Bob is taller than Henry. Henry is taller than Emma. Since Bob comes before Emma in the height ordering, the answer is Yes.",
+    "extracted": "Yes",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 7x + -14 = -98",
+    "kind": "linear_equation",
+    "expected": "-12",
+    "reply": "7x + -14 = -98\n7x = -90\nx = -10",
+    "extracted": "-10",
+    "correct": false
+  },
+  {
+    "question": "What is 27 - 22?",
+    "kind": "arithmetic",
+    "expected": "5",
+    "reply": "27 - 22 = 11",
+    "extracted": "11",
+    "correct": false
+  },
+  {
+    "question": "Frank is taller than Emma. Emma is taller than Bob. Is Frank taller than Emma?",
+    "kind": "comparison",
+    "expected": "Yes",
+    "reply": "Frank is taller than Emma. Emma is taller than Bob. Since Frank comes before Emma in the height ordering, the answer is Yes.",
+    "extracted": "Yes",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 10x + -3 = -123",
+    "kind": "linear_equation",
+    "expected": "-12",
+    "reply": "10x + -3 = -123\n10x = -150\nx = -15",
+    "extracted": "-15",
+    "correct": false
+  },
+  {
+    "question": "What is 17 * 14?",
+    "kind": "arithmetic",
+    "expected": "238",
+    "reply": "17 * 14 = 126",
+    "extracted": "126",
+    "correct": false
+  },
+  {
+    "question": "Carol is taller than Frank. Frank is taller than Dave. Is Dave taller than Carol?",
+    "kind": "comparison",
+    "expected": "No",
+    "reply": "Carol is taller than Frank. Frank is taller than Dave. Since Dave comes after Carol in the height ordering, the answer is No.",
+    "extracted": "No",
+    "correct": true
+  },
+  {
+    "question": "What is 44 + 45?",
+    "kind": "arithmetic",
+    "expected": "89",
+    "reply": "44 + 45 = 93",
+    "extracted": "93",
+    "correct": false
+  },
+  {
+    "question": "What is 2 - 41?",
+    "kind": "arithmetic",
+    "expected": "-39",
+    "reply": "2 - 41 = -33",
+    "extracted": "-33",
+    "correct": false
+  },
+  {
+    "question": "Bob is taller than Dave. Dave is taller than Emma. Is Dave taller than Bob?",
+    "kind": "comparison",
+    "expected": "No",
+    "reply": "Bob is taller than Dave. Dave is taller than Emma. Since Dave comes after Bob in the height ordering, the answer is No.",
+    "extracted": "No",
+    "correct": true
+  },
+  {
+    "question": "Solve for x: 5x + 3 = -52",
+    "kind": "linear_equation",
+    "expected": "-11",
+    "reply": "5x + 3 = -52\n5x = -50\nx = -10",
+    "extracted": "-10",
+    "correct": false
+  },
+  {
+    "question": "Solve for x: 5x + 10 = 20",
+    "kind": "linear_equation",
+    "expected": "2",
+    "reply": "5x + 10 = 20\n5x = 5\nx = 1",
+    "extracted": "1",
+    "correct": false
+  },
+  {
+    "question": "Henry is taller than Emma. Emma is taller than Frank. Is Henry taller than Emma?",
+    "kind": "comparison",
+    "expected": "Yes",
+    "reply": "Henry is taller than Emma. Emma is taller than Frank. Since Henry comes before Emma in the height ordering, the answer is Yes.",
+    "extracted": "Yes",
+    "correct": true
+  },
+  {
+    "question": "What is 42 - 32?",
+    "kind": "arithmetic",
+    "expected": "10",
+    "reply": "42 - 32 = 16",
+    "extracted": "16",
+    "correct": false
+  }
+]

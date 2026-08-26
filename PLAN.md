@@ -371,7 +371,68 @@ green → only then move to the next phase. No phase is "done" without tests.
         fixes what is actually a format-consistency problem. The Phase
         5/10.5 reasoning checkpoint (36.7%) remains the best available
         for this category, confirmed twice now.
-  - [ ] **12C — A real verifier/reward environment**: records
+  - [x] **12C — Diagnose.** `scripts/diagnose_failures.py`: classifies
+        every held-out miss (no-answer-extracted / degenerate-repetition
+        / close-miss <=5 off / wild-miss >5 off), broken down by problem
+        kind. Two independent 100-problem runs against the reference
+        checkpoint (38% and 44% accuracy -- consistent with the
+        established range) gave the **same clean, decisive taxonomy both
+        times**: 100% of failures fall in arithmetic/linear_equation
+        (comparison/logic stayed at ~100% correct, as in every prior
+        phase); **zero** were unparseable-output or degenerate-repetition
+        failures -- the model always produces a syntactically valid
+        number, every single time; failures split roughly 57%/43% between
+        close misses (within 5) and wild misses. Reading the actual
+        transcripts: the model's *procedure* is consistently correct
+        (correctly restates the equation, correctly sequences "subtract,
+        then divide") -- what's unreliable is the arithmetic executed at
+        each step, sometimes so much so that the stated final answer
+        doesn't even follow from the model's own stated intermediate
+        value. **Conclusion: 100% of this checkpoint's remaining gap is
+        one thing -- unreliable exact arithmetic execution, not
+        comprehension, not format, not logic.** This is exactly what
+        Phase 7 already fixed (98.3% via tool-calling, both model sizes)
+        -- the diagnostic confirms *why* with hard evidence rather than
+        inference, and says clearly: more SFT data (teacher or
+        otherwise) is not the lever to pull for this gap; 12D-12F below
+        remain worth doing for whatever residual isn't arithmetic (there
+        wasn't any in this sample, but a coding/general-QA category would
+        likely show a different taxonomy), while 12G (route arithmetic to
+        the tool, as already built) is the actually-proven fix for what
+        this diagnostic found.
+  - [ ] **12D — Teacher normalization.** Rewrite verified teacher
+        explanations into one canonical presentation format (keep the
+        teachers' correct *content*, discard their raw stylistic
+        diversity -- 12B's likely root cause) before any of them get
+        trained on again; add a cross-teacher agreement check (multiple
+        teachers independently agreeing on a question is a stronger
+        accept signal than one teacher's stated answer verifying).
+  - [ ] **12E — Controlled distillation sweep**, once 12D's data exists:
+        0% / 10% / 20% / 30% teacher-data proportion blended into the
+        original dataset (not just 0% vs. 100% vs. one mixed ratio, as
+        12B tested), all against the same untouched held-out set, to
+        find the actual useful blend ratio instead of assuming one.
+  - [ ] **12F — Failure-driven training.** Once there's a working
+        distillation recipe: run the current-best checkpoint on fresh
+        unseen problems, classify the failures (reusing 12C's taxonomy),
+        generate targeted teacher data for the specific failure modes
+        found, verify, retrain, re-diagnose. A loop, not a one-shot.
+  - [ ] **12G — External intelligence for reasoning**: lean on Phase 7's
+        tool-calling and Phase 8's RAG rather than expecting a 100M
+        model's weights alone to contain everything -- route arithmetic
+        to the calculator (Phase 7 already showed this works, 98.3%),
+        knowledge questions to retrieval (Phase 8), and reserve the
+        model's own weights for classification/routing/concise reasoning
+        it's actually positioned to do well.
+  - [ ] **12H — Capacity scaling experiment**: the exact same dataset and
+        recipe from 12E/12F run across 100M -> 300M -> 500M -> 1B (config
+        change only, per Phase 10's proof that the pipeline scales this
+        way) to find out empirically whether remaining headroom is a
+        data problem or a capacity problem, rather than guessing. Target
+        framed incrementally (36.7% -> 50% -> 65% -> ...), not jumping
+        straight to a headline number -- a benchmark chased directly is a
+        benchmark optimized, not a model that generalizes.
+  - [ ] **12I — A real verifier/reward environment**: records
         (question, candidate, tool_calls, verification, reward) per
         attempt, not just question->answer; a real process-isolated
         code-execution sandbox for coding rewards (distinct from Phase
@@ -380,12 +441,19 @@ green → only then move to the next phase. No phase is "done" without tests.
         loses information (e.g. tool-call reward = correct tool +
         correct arguments + correct final result, each worth partial
         credit).
-  - [ ] **12D — RL / reward optimization** on top of 12C's environment,
+  - [ ] **12J — RL / reward optimization** on top of 12I's environment,
         only once it's built and produces sane rewards on known cases.
         Every experiment reports the training metric *and* the
         downstream task metric on fresh held-out problems, since Phase
         6 already showed those can diverge -- that discipline is
         non-negotiable from here on.
+
+      **Held-out discipline going forward** (12H's whole premise depends
+      on this): keep train / dev / a never-trained-on secret test set
+      permanently separate. The 60-problem eval set used throughout
+      Phases 5-12 has been dev-like (reused across many experiments to
+      pick winners) -- a truly held-out secret set should be introduced
+      before any headline accuracy number is reported as final.
 
       **Checkpoint naming/adoption discipline going forward**: every
       variant gets an explicit name (`neuraquill-100m-v1`,

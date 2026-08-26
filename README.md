@@ -27,8 +27,9 @@ current status.
 | 11 | Teacher data factory | ✅ implemented + tested (48 tests) + real run (mixed result, honestly reported) |
 | 12A | Larger verified dataset + spend-tracked Claude | ✅ real run (925 examples, 7 local teachers) |
 | 12B | Controlled SFT experiments (baseline/original/teacher/mixed) | ✅ real run (informative negative result) |
+| 12C | Failure taxonomy (diagnose before training more) | ✅ real run (clean, decisive result) |
 
-**315/315 tests passing.**
+**327/327 tests passing.**
 
 ## Phase 11: teacher data factory
 
@@ -70,6 +71,24 @@ looked perfectly healthy throughout, meaning a clean val-loss curve does
 not certify a small model retained the skill being measured. Likely
 mechanism and next steps in PLAN.md Phase 12B. Reference checkpoint
 (36.7%) remains the best, confirmed twice now.
+
+## Phase 12C: diagnose before training more
+
+Before generating any more teacher data, `scripts/diagnose_failures.py`
+classified every miss the reference checkpoint made on 100 fresh held-out
+problems (two independent runs, 38% and 44% accuracy, same taxonomy both
+times): **100% of failures were arithmetic/linear_equation** (comparison
+stayed ~100% correct, as always); **zero** were unparseable output or
+degenerate repetition -- the model always produces a syntactically valid
+number. ~57% were close misses (within 5), ~43% wild misses. Reading the
+transcripts: the *procedure* is consistently right, the *arithmetic
+executed at each step* isn't -- sometimes not even internally consistent
+with the model's own stated intermediate value. **This checkpoint's
+entire remaining gap is one thing: unreliable exact arithmetic, not
+comprehension, format, or logic** -- exactly what Phase 7's tool-calling
+already fixes (98.3%). More SFT data isn't the lever for this particular
+gap; the diagnostic just proved it with evidence instead of leaving it as
+an assumption.
 
 ## NeuraQuill-10M vs NeuraQuill-100M (Phase 10.5 baseline)
 
