@@ -400,30 +400,70 @@ green → only then move to the next phase. No phase is "done" without tests.
         likely show a different taxonomy), while 12G (route arithmetic to
         the tool, as already built) is the actually-proven fix for what
         this diagnostic found.
-  - [ ] **12D — Teacher normalization.** Rewrite verified teacher
-        explanations into one canonical presentation format (keep the
-        teachers' correct *content*, discard their raw stylistic
-        diversity -- 12B's likely root cause) before any of them get
-        trained on again; add a cross-teacher agreement check (multiple
-        teachers independently agreeing on a question is a stronger
-        accept signal than one teacher's stated answer verifying).
-  - [ ] **12E — Controlled distillation sweep**, once 12D's data exists:
-        0% / 10% / 20% / 30% teacher-data proportion blended into the
-        original dataset (not just 0% vs. 100% vs. one mixed ratio, as
-        12B tested), all against the same untouched held-out set, to
-        find the actual useful blend ratio instead of assuming one.
+  - [x] **12D — Teacher normalization.** `teachers/normalize.py`: strips
+        markdown (`**bold**`, `## headers`) and LaTeX (`$$...$$`,
+        `\(...\)`) syntax that doesn't match this project's tokenizer
+        training distribution (Gutenberg prose + plain instructions, no
+        markdown/LaTeX corpus); guarantees an explicit "The answer is X."
+        statement rather than depending on the extractor's last-number
+        fallback. Also caught a genuine, separate data-quality bug while
+        building this: **~3% of Phase 12A's accepted examples were
+        verified "correct" only because a truncated (`max_tokens`-cut-off)
+        response happened to contain the right number somewhere** -- 19%
+        of `command-r7b`'s examples specifically. `normalize_explanation`
+        drops these outright rather than patching a bolted-on answer onto
+        an interrupted reasoning chain. Applied to the 925 examples:
+        **901 kept (97.4%)**, 0 failed re-verification after cleanup (24
+        dropped, all truncated `command-r7b` cases). 21 tests.
+  - [x] **12E — Controlled distillation sweep**: 0% / 10% / 20% / 30%
+        *normalized* teacher-data blended into the original 3000-example
+        dataset, same checkpoint/recipe as 12B, same held-out set.
+        **Result: monotonic degradation at every single ratio tested**,
+        even after 12D's real cleanup:
+
+        | teacher % | reasoning accuracy |
+        |---|---|
+        | 0% (pure original) | 25-27% |
+        | 10% (270 orig + 300 normalized teacher) | 20.0% |
+        | 20% (2400 orig + 600 normalized teacher) | 15.0% |
+        | 30% (2100 orig + 901 normalized teacher) | 15.0% |
+        | 100% (raw, Phase 12B) | 0.0% |
+        | reference (original recipe, 2000 steps) | **36.7%** |
+
+        No sweet spot exists in this sweep -- every teacher fraction,
+        however small, made the checkpoint *worse* than 0%, and 12D's
+        genuine data-quality fixes (markdown/LaTeX stripped, truncated
+        examples dropped) softened the collapse (15-20% vs. 12B's 0%
+        at high ratios) but did not reverse the trend. **This shifts the
+        most likely explanation from "fixable data-engineering problem"
+        toward "100M is close to its capacity ceiling for absorbing
+        stylistically diverse reasoning data at this training budget"** --
+        which is exactly what 12H (capacity scaling) exists to test
+        directly instead of guessing. Recommendation: stop iterating on
+        teacher-blend ratio/cleanup for *this* model size -- diminishing
+        and negative returns across four honestly-measured data points is
+        a result, not a reason to try a fifth ratio. The proven, already-
+        built fix for the arithmetic gap 12C actually diagnosed remains
+        12G (tool-calling, 99% confirmed on the identical problem set).
   - [ ] **12F — Failure-driven training.** Once there's a working
         distillation recipe: run the current-best checkpoint on fresh
         unseen problems, classify the failures (reusing 12C's taxonomy),
         generate targeted teacher data for the specific failure modes
         found, verify, retrain, re-diagnose. A loop, not a one-shot.
-  - [ ] **12G — External intelligence for reasoning**: lean on Phase 7's
-        tool-calling and Phase 8's RAG rather than expecting a 100M
-        model's weights alone to contain everything -- route arithmetic
-        to the calculator (Phase 7 already showed this works, 98.3%),
-        knowledge questions to retrieval (Phase 8), and reserve the
-        model's own weights for classification/routing/concise reasoning
-        it's actually positioned to do well.
+  - [x] **12G — External intelligence for reasoning, confirmed directly
+        against 12C's diagnostic.** Re-ran the *exact same* 100-problem
+        set (same seed) that produced 12C's taxonomy through the Phase 7
+        tool-tuned checkpoint + real orchestrator instead of the raw
+        reasoning checkpoint: **99/100 (99%)** -- linear_equation 100%,
+        comparison 100%, arithmetic 97.3% (1 miss). Not an inference from
+        Phase 7's earlier number on a different set; this is the identical
+        test 12C used, closing the loop with a like-for-like comparison.
+        Confirms the diagnosis and the fix in one measurement: lean on
+        Phase 7's tool-calling for arithmetic and Phase 8's RAG for
+        knowledge questions rather than expecting a 100M model's raw
+        weights to contain everything -- reserve the weights for
+        classification/routing/concise reasoning, which is what they're
+        actually positioned to do well.
   - [ ] **12H — Capacity scaling experiment**: the exact same dataset and
         recipe from 12E/12F run across 100M -> 300M -> 500M -> 1B (config
         change only, per Phase 10's proof that the pipeline scales this

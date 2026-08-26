@@ -28,8 +28,11 @@ current status.
 | 12A | Larger verified dataset + spend-tracked Claude | ✅ real run (925 examples, 7 local teachers) |
 | 12B | Controlled SFT experiments (baseline/original/teacher/mixed) | ✅ real run (informative negative result) |
 | 12C | Failure taxonomy (diagnose before training more) | ✅ real run (clean, decisive result) |
+| 12D | Teacher data normalization | ✅ real run (901/925 kept, caught a real data bug) |
+| 12E | Controlled distillation sweep (0/10/20/30%) | ✅ real run (monotonic negative result) |
+| 12G | External intelligence, confirmed on the 12C set | ✅ real run (99% vs. 38-44%) |
 
-**327/327 tests passing.**
+**348/348 tests passing.**
 
 ## Phase 11: teacher data factory
 
@@ -89,6 +92,40 @@ comprehension, format, or logic** -- exactly what Phase 7's tool-calling
 already fixes (98.3%). More SFT data isn't the lever for this particular
 gap; the diagnostic just proved it with evidence instead of leaving it as
 an assumption.
+
+## Phase 12D/12E/12G: normalize, sweep, confirm
+
+**12D** (`teachers/normalize.py`) strips markdown/LaTeX formatting from
+verified teacher explanations and guarantees an explicit answer
+statement. Building it surfaced a real, separate data-quality bug: ~3% of
+Phase 12A's accepted examples (19% of `command-r7b`'s specifically) were
+verified "correct" only because a `max_tokens`-truncated response
+happened to contain the right number somewhere -- dropped rather than
+patched. 901/925 examples survived (97.4%).
+
+**12E** swept 0% / 10% / 20% / 30% *normalized* teacher-data blended into
+the original dataset, same recipe, same held-out set:
+
+| teacher % | accuracy |
+|---|---|
+| 0% | 25-27% |
+| 10% | 20.0% |
+| 20% | 15.0% |
+| 30% | 15.0% |
+| 100% (raw) | 0.0% |
+| reference | **36.7%** |
+
+**Monotonic degradation at every ratio tested**, even with 12D's genuine
+cleanup applied. No sweet spot exists in this sweep. That shifts the most
+likely explanation from "fixable data-engineering problem" toward "100M
+is near its capacity ceiling for absorbing stylistically diverse
+reasoning data" -- exactly what a future capacity-scaling experiment
+would test directly instead of guessing.
+
+**12G** confirmed the actual fix on the *identical* 100-problem set 12C's
+diagnostic used: the Phase 7 tool-tuned checkpoint scores **99%** where
+the raw reasoning checkpoint scored 38-44%. Not a different measurement
+compared against an old number -- the same test, closing the loop.
 
 ## NeuraQuill-10M vs NeuraQuill-100M (Phase 10.5 baseline)
 
